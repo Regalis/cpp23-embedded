@@ -1,0 +1,8 @@
+build/
+.cache/
+*.swp
+*.swo
+*.elf
+*.uf2
+*.bin
+compile_commands.json

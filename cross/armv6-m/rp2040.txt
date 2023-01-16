@@ -1,0 +1,28 @@
+[constants]
+toolchain_prefix = 'arm-none-eabi-'
+common_args = [
+    '-ffunction-sections',
+    '-fdata-sections',
+    '-mcpu=cortex-m0']
+
+[binaries]
+c = toolchain_prefix + 'gcc'
+cpp = toolchain_prefix + 'g++'
+ar = toolchain_prefix + 'ar'
+strip = toolchain_prefix + 'strip'
+objdump = toolchain_prefix + 'objdump'
+ld = toolchain_prefix + 'ld'
+
+[properties]
+linker_script = 'armv6-m/rp2040.ld'
+
+[built-in options]
+cpp_args = common_args + [
+    '-fno-exceptions']
+c_args = common_args
+
+[host_machine]
+system = 'baremetal'
+cpu_family = 'arm'
+cpu = 'armv6-m'
+endian = 'little'
