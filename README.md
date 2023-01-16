@@ -23,7 +23,7 @@ In the `C` programming world - It is very common to fall into a trap and mix
 bits or registers. For example, given the following `C` code for the AVR
 microcontroller:
 
-```C
+```c
 void adc_start_conversion() {
     ADCSRB |= (1 << ADSC); 
 }
@@ -53,7 +53,7 @@ MCU's registers and registers of external devices.
 
 I already provided a working proof-of-concept which looks like this:
 
-```C++
+```c++
 using gpio_oe = rw_reg<addrs::sio_base, 0x20>;
 using gpio_oe_set = rw_reg<addrs::sio_base, 0x024>;
 using gpio_oe_clr = rw_reg<addrs::sio_base, 0x028>;
@@ -62,13 +62,13 @@ using gpio_oe_xor = rw_reg<addrs::sio_base, 0x02c>;
 
 The user can access these registers with static functions:
 
-```C++
+```c++
 registers::gpio_oe_set::set_value(1 << 5);
 ```
 
 Or create a higher level abstractions around it:
 
-```C++
+```c++
 gpio::pin<pins::gpio25> led0;
 led0.set_as_output();
 led0.toggle();
@@ -86,7 +86,7 @@ papers may allow us to define a multidimensional subscript operator
 (`operator[](auto... bits)`). As a result, we may use the following syntax to
 access registers:
 
-```C++
+```c++
 registers::gpio_oe[bit::1, bit::2, bit::5] = 1;
 registers::gpio_oe[bit::1, bit::2, bit::5] = state::high;
 
@@ -107,7 +107,7 @@ peripheral designed to interface with parallel memory modules.
 The "*ideal*" situation will be to provide a driver with the following
 interface:
 
-```C++
+```c++
 constexpr auto interface_descriptor = interface::gpio::for<drivers::lcd::hd44780>{
     .mode = drivers::lcd::hd44780::4bit,
     .register_select = platform::pins::gpio10,
@@ -137,7 +137,7 @@ The library must provide a seamless integration with the great `std::print`
 [P2093R14](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p2093r14.html)),
 for example:
 
-```C++
+```c++
 std::print(uart0, "Hello world from the microcontroller! My CPUID is: {}", platform::cpuid)
 ```
 
