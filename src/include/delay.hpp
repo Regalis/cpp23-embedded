@@ -21,19 +21,11 @@
 
 #include <cstdint>
 
-#include "delay.hpp"
-#include "gpio.hpp"
-#include "reset.hpp"
-
-int main()
+inline void delay(uint32_t num)
 {
-    using namespace platform;
-    reset::release_subsystem_wait(reset::subsystems::io_bank0);
-    gpio::pin<pins::gpio25> led0;
-    led0.function_select(gpio::functions::sio);
-    led0.set_as_output();
-    while (1) {
-        led0.toggle();
-        delay(0x100000 / 8);
+    volatile uint32_t counter = num;
+    while (counter) {
+        counter = counter - 1;
     }
 }
+
