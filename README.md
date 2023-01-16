@@ -114,9 +114,9 @@ constexpr auto interface_descriptor = interface::gpio::for<drivers::lcd::hd44780
     .read_write = platform::pins::gpio11,
     .enable = platform::pins::gpio12,
     .data0 = platform::pins::gpio13,
-    .data1 = platform::pins::gpio13,
-    .data2 = platform::pins::gpio13,
-    .data3 = platform::pins::gpio13,
+    .data1 = platform::pins::gpio14,
+    .data2 = platform::pins::gpio15,
+    .data3 = platform::pins::gpio16,
 };
 
 drivers::lcd::hd44780 main_lcd{interface::gpio, interface_descriptor};
