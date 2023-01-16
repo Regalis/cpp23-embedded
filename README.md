@@ -54,7 +54,7 @@ MCU's registers and registers of external devices.
 I already provided a working proof-of-concept which looks like this:
 
 ```c++
-using gpio_oe = rw_reg<addrs::sio_base, 0x20>;
+using gpio_oe = rw_reg<addrs::sio_base, 0x020>;
 using gpio_oe_set = rw_reg<addrs::sio_base, 0x024>;
 using gpio_oe_clr = rw_reg<addrs::sio_base, 0x028>;
 using gpio_oe_xor = rw_reg<addrs::sio_base, 0x02c>;

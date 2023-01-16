@@ -94,7 +94,7 @@ using gpio_out_set = rw_reg<addrs::sio_base, 0x014>;
 using gpio_out_clr = rw_reg<addrs::sio_base, 0x018>;
 using gpio_out_xor = rw_reg<addrs::sio_base, 0x01c>;
 
-using gpio_oe = rw_reg<addrs::sio_base, 0x20>;
+using gpio_oe = rw_reg<addrs::sio_base, 0x020>;
 using gpio_oe_set = rw_reg<addrs::sio_base, 0x024>;
 using gpio_oe_clr = rw_reg<addrs::sio_base, 0x028>;
 using gpio_oe_xor = rw_reg<addrs::sio_base, 0x02c>;
