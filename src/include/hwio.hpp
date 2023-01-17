@@ -18,12 +18,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-#ifndef __HWIO_HPP__
-#define __HWIO_HPP__
+#ifndef HWIO_HPP
+#define HWIO_HPP
 
 #include <concepts>
 #include <cstdint>
 #include <type_traits>
+#include <utility>
 
 namespace hwio {
 
@@ -84,6 +85,12 @@ concept hwio_reg = requires
 };
 
 template<typename T>
+concept strong_bits = requires(T t)
+{
+    std::to_underlying(t);
+};
+
+template<typename T>
 class ro
 {
   public:
@@ -108,14 +115,44 @@ template<typename T>
 class wo
 {
   public:
-    constexpr static void set_bit(typename T::bits_t bit_no)
+    constexpr static void set_bit(std::integral auto bit_no)
     {
         T::ref() = T::ref() | (1 << bit_no);
     }
 
-    constexpr static void reset_bit(typename T::bits_t bit_no)
+    constexpr static void set_bit(strong_bits auto bit_no)
+    {
+        set_bit(std::to_underlying(bit_no));
+    }
+
+    constexpr static void set_bits(auto... bit_no)
+    {
+        T::ref() = T::ref() | ((1 << bit_no) | ...);
+    }
+
+    constexpr static void set_bits(strong_bits auto... bit_no)
+    {
+        T::ref() = T::ref() | ((1 << std::to_underlying(bit_no)) | ...);
+    }
+
+    constexpr static void set_bits(std::integral auto... bit_no)
+    {
+        T::ref() = T::ref() | ((1 << bit_no) | ...);
+    }
+
+    constexpr static void reset_bit(std::integral auto bit_no)
     {
         T::ref() = T::ref() & ~(1 << bit_no);
+    }
+
+    constexpr static void reset_bit(strong_bits auto bit_no)
+    {
+        T::ref() = T::ref() & ~(1 << std::to_underlying(bit_no));
+    }
+
+    constexpr static void reset_bits(strong_bits auto... bit_no)
+    {
+        T::ref() = T::ref() & ~((1 << std::to_underlying(bit_no)) | ...);
     }
 
     constexpr static void toggle(typename T::bits_t bit_no)

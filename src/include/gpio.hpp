@@ -18,8 +18,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-#ifndef __GPIO_HPP__
-#define __GPIO_HPP__
+#ifndef GPIO_HPP
+#define GPIO_HPP
 
 #include "rp2040.hpp"
 #include <type_traits>
@@ -42,7 +42,7 @@ template<platform::pins pin_no>
 static constexpr void function_select(functions func)
 {
     using ctrl_reg = platform::registers::gpio_ctrl<pin_no>;
-    ctrl_reg::set_value(static_cast<std::underlying_type_t<functions>>(func));
+    ctrl_reg::set_value(std::to_underlying(func));
 }
 
 static constexpr void set_as_output(platform::pins pin_no)

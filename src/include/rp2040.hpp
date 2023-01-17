@@ -1,5 +1,26 @@
-#ifndef __RP2040_HPP__
-#define __RP2040_HPP__
+/*
+ *
+ * Copyright (C) 2023 Patryk Jaworski (blog.regalis.tech)
+ *
+ * Author: Patryk Jaworski <regalis@regalis.tech>
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ */
+
+#ifndef RP2040_HPP
+#define RP2040_HPP
 
 #include <cstdint>
 
@@ -55,9 +76,11 @@ enum pins : uint8_t
 
 namespace registers {
 namespace addrs {
-constexpr static platform::reg_ptr_t io_bank0_base = 0x40014000;
+constexpr static platform::reg_ptr_t xip_ssi_base = 0x18000000;
 constexpr static platform::reg_ptr_t sio_base = 0xd0000000;
 constexpr static platform::reg_ptr_t resets_base = 0x4000c000;
+constexpr static platform::reg_ptr_t pads_qspi_base = 0x40020000;
+constexpr static platform::reg_ptr_t io_bank0_base = 0x40014000;
 
 template<uint8_t pin_no>
 struct gpio_ctrl_for
@@ -130,6 +153,67 @@ enum reset_bits : uint8_t
 using reset = rw_reg<addrs::resets_base, 0, reset_bits>;
 using wdsel = rw_reg<addrs::resets_base, 0x4, reset_bits>;
 using reset_done = rw_reg<addrs::resets_base, 0x8, reset_bits>;
+
+namespace ssi {
+enum class ssienr_bits : uint8_t
+{
+    ssi_en = 0,
+};
+
+using ctrl0 = rw_reg<addrs::xip_ssi_base, 0x00>;
+using ctrl1 = rw_reg<addrs::xip_ssi_base, 0x04>;
+using ssienr = rw_reg<addrs::xip_ssi_base, 0x08>;
+using mwcr = rw_reg<addrs::xip_ssi_base, 0x0c>;
+using ser = rw_reg<addrs::xip_ssi_base, 0x10>;
+using baudr = rw_reg<addrs::xip_ssi_base, 0x14>;
+using txftlr = rw_reg<addrs::xip_ssi_base, 0x18>;
+using rxftlr = rw_reg<addrs::xip_ssi_base, 0x1c>;
+using txflr = rw_reg<addrs::xip_ssi_base, 0x20>;
+using rxflr = rw_reg<addrs::xip_ssi_base, 0x24>;
+using sr = rw_reg<addrs::xip_ssi_base, 0x28>;
+using imr = rw_reg<addrs::xip_ssi_base, 0x2c>;
+using isr = rw_reg<addrs::xip_ssi_base, 0x30>;
+using risr = rw_reg<addrs::xip_ssi_base, 0x34>;
+using txoicr = rw_reg<addrs::xip_ssi_base, 0x38>;
+using rxoicr = rw_reg<addrs::xip_ssi_base, 0x3c>;
+using rxuicr = rw_reg<addrs::xip_ssi_base, 0x40>;
+using msticr = rw_reg<addrs::xip_ssi_base, 0x44>;
+using icr = rw_reg<addrs::xip_ssi_base, 0x48>;
+using dmacr = rw_reg<addrs::xip_ssi_base, 0x4c>;
+using dmatdlr = rw_reg<addrs::xip_ssi_base, 0x50>;
+using dmardlr = rw_reg<addrs::xip_ssi_base, 0x54>;
+using idr = rw_reg<addrs::xip_ssi_base, 0x58>;
+using ssi_version_id = rw_reg<addrs::xip_ssi_base, 0x5c>;
+using dr0 = rw_reg<addrs::xip_ssi_base, 0x60>;
+using rx_sample_dly = rw_reg<addrs::xip_ssi_base, 0xf0>;
+using spi_ctrlr0 = rw_reg<addrs::xip_ssi_base, 0xf4>;
+using txd_drive_edge = rw_reg<addrs::xip_ssi_base, 0xf8>;
+}
+
+enum class gpio_pads_bits : uint8_t
+{
+    slewfast = 0,
+    schmitt,
+    pde,
+    pue,
+    drive0,
+    drive1,
+    ie,
+    od,
+};
+
+enum class volate_select_bits : uint8_t
+{
+    voltage = 0,
+};
+
+using volate_select = rw_reg<addrs::pads_qspi_base, 0x00, volate_select_bits>;
+using gpio_qspi_sclk = rw_reg<addrs::pads_qspi_base, 0x04, gpio_pads_bits>;
+using gpio_qspi_sd0 = rw_reg<addrs::pads_qspi_base, 0x08, gpio_pads_bits>;
+using gpio_qspi_sd1 = rw_reg<addrs::pads_qspi_base, 0x0c, gpio_pads_bits>;
+using gpio_qspi_sd2 = rw_reg<addrs::pads_qspi_base, 0x10, gpio_pads_bits>;
+using gpio_qspi_sd3 = rw_reg<addrs::pads_qspi_base, 0x14, gpio_pads_bits>;
+using gpio_qspi_ss = rw_reg<addrs::pads_qspi_base, 0x18, gpio_pads_bits>;
 
 }
 
