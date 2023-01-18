@@ -125,19 +125,14 @@ class wo
         set_bit(std::to_underlying(bit_no));
     }
 
-    constexpr static void set_bits(auto... bit_no)
+    constexpr static void set_bits(std::integral auto... bit_no)
     {
         T::ref() = T::ref() | ((1 << bit_no) | ...);
     }
 
     constexpr static void set_bits(strong_bits auto... bit_no)
     {
-        T::ref() = T::ref() | ((1 << std::to_underlying(bit_no)) | ...);
-    }
-
-    constexpr static void set_bits(std::integral auto... bit_no)
-    {
-        T::ref() = T::ref() | ((1 << bit_no) | ...);
+        set_bits(std::to_underlying(bit_no)...);
     }
 
     constexpr static void reset_bit(std::integral auto bit_no)
@@ -147,17 +142,27 @@ class wo
 
     constexpr static void reset_bit(strong_bits auto bit_no)
     {
-        T::ref() = T::ref() & ~(1 << std::to_underlying(bit_no));
+        reset_bit(std::to_underlying(bit_no));
+    }
+
+    constexpr static void reset_bits(std::integral auto bit_no)
+    {
+        T::ref() = T::ref() & ~((1 << bit_no) | ...);
     }
 
     constexpr static void reset_bits(strong_bits auto... bit_no)
     {
-        T::ref() = T::ref() & ~((1 << std::to_underlying(bit_no)) | ...);
+        reset_bits(std::to_underlying(bit_no)...);
     }
 
-    constexpr static void toggle(typename T::bits_t bit_no)
+    constexpr static void toggle(std::integral auto bit_no)
     {
         T::ref() = T::ref() ^ (1 << bit_no);
+    }
+
+    constexpr static void toggle(strong_bits auto bit_no)
+    {
+        toggle(std::to_underlying(bit_no));
     }
 
     constexpr static void set_value(typename T::reg_value_t value)
