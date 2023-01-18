@@ -21,5 +21,6 @@ headers += files([
   'hwio.hpp',
   'gpio.hpp',
   'reset.hpp',
-  'rp2040.hpp'
+  'rp2040.hpp',
+  'pads.hpp',
 ])

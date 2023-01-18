@@ -145,7 +145,7 @@ class wo
         reset_bit(std::to_underlying(bit_no));
     }
 
-    constexpr static void reset_bits(std::integral auto bit_no)
+    constexpr static void reset_bits(std::integral auto... bit_no)
     {
         T::ref() = T::ref() & ~((1 << bit_no) | ...);
     }

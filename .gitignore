@@ -5,4 +5,5 @@ build/
 *.elf
 *.uf2
 *.bin
+*.py
 compile_commands.json
