@@ -45,11 +45,11 @@ provide bit-level correctness for all abstractions.
 
 ## No preprocessor
 
-I think we came into the point where we do not need any preprocessor directives
-- we can replace them all with `constexpr`, `consteval` and a bit of
+I think we came into the point where we do not need any preprocessor
+directives - we can replace them all with `constexpr`, `consteval` and a bit of
 metaprogramming.
 
-**Note: To be fair, the only one preprocessor directive you may see in the
+**Note**: To be fair, the only one preprocessor directive you may see in the
 codebase is `#include` - this is due to lack of full support for **modules** in
 both [Meson build system](https://github.com/mesonbuild/meson/issues/5024) and
 **GCC**.
