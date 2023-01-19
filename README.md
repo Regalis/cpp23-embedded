@@ -10,11 +10,11 @@ a modern C++ framework for microcontrollers).
 This project is at it's very early stage. Things may be brutally rewritten,
 reorganized without any remorse.
 
-## Basic assumptions and goals
+# Basic assumptions and goals
 
 The final library/framework should comply with the following assumptions:
 
-###  Security first
+##  Security first
 
 It must be hard (or impossible) to use the framework wrong. This can be
 achieved by using strong types and concepts extensively.
@@ -37,7 +37,36 @@ analog comparator. All because of the fact that the programmer mixed the
 We can easily avoid this kind of errors, C++23 comes with a handy tools which
 may help: `std::is_scoped_enum` and `std::to_underlying`.
 
-### True zero-cost abstractions
+## Ensure correctness
+
+As it comes to correctness - we already have plenty of great tools built right
+into the C++. By using `constexpr`, `consteval` and `static_assert` - we can
+provide bit-level correctness for all abstractions.
+
+## No preprocessor
+
+I think we came into the point where we do not need any preprocessor directives
+- we can replace them all with `constexpr`, `consteval` and a bit of
+metaprogramming.
+
+**Note: To be fair, the only one preprocessor directive you may see in the
+codebase is `#include` - this is due to lack of full support for **modules** in
+both [Meson build system](https://github.com/mesonbuild/meson/issues/5024) and
+**GCC**.
+
+## Absolute no dependencies
+
+The final library/framework should not use any dependencies at all, not even
+headers provided by the CPU vendors. 
+
+This is to **enforce maximum security** and ensure that the library/framework
+will be **fully controlled by the end users**.
+
+*This is the absolute opposite of what Rust community is doing all over the
+place (using a library/framework will almost always lead to downloading
+gazillion of dependencies).*
+
+## True zero-cost abstractions
 
 The library must use a true, instruction-level test system to ensure maximum
 performance.
@@ -46,7 +75,7 @@ This can be achieved by compiling dedicated tests with `-ffunction-sections`
 and `-fdata-sections` and comparing each section of the resulting binaries with
 a predefined set of expected instructions.
 
-### Universal access to registers
+## Universal access to registers
 
 The library must provide a universal way to work with *registers*. Both for
 MCU's registers and registers of external devices.
@@ -76,7 +105,7 @@ led0.toggle();
 
 The following C++23 features may be helpful:
 
-#### Multidimensional subscript operator ([P2128R6](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2128r6.pdf))
+### Multidimensional subscript operator ([P2128R6](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2128r6.pdf))
 
 The
 [P2128R6](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2128r6.pdf)
@@ -94,7 +123,7 @@ registers::gpio_oe[bit::1, bit::2, bit::5] = state::high;
 registers::gpio_oe[1, 2, 5] = 1;
 ```
 
-#### Reusable device drivers
+## Reusable device drivers
 
 Device drivers must by provided in a form which will be reusable across many
 different CPU architectures and many different communication methods, thus they
@@ -130,7 +159,7 @@ std::print(second_lcd, "Hello world again...");
 
 ```
 
-#### Convenient input/output
+## Convenient input/output
 
 The library must provide a seamless integration with the great `std::print`
 (see
@@ -138,22 +167,22 @@ The library must provide a seamless integration with the great `std::print`
 for example:
 
 ```c++
-std::print(uart0, "Hello world from the microcontroller! My CPUID is: {}", platform::cpuid)
+std::print(uart0, "Hello world from the microcontroller! My CPUID is: {}", platform::cpuid);
 ```
 
-### Code-completion friendly
+## Code-completion friendly
 
 The library must be developer-friendly, thus all types, globals, function names
 must use suitable prefixes to allow developer to use the library without
 digging into the documentation. For example use `m_member` prefix instead of
 `member_` postfix while working with member variables.
 
-## Build system
+# Build system
 
 The library must use modern, bloat-free build system. My favourite one is
 `Meson`.
 
-### Building
+## Building
 
 The project must be built using the Mesons's cross build environment.
 
