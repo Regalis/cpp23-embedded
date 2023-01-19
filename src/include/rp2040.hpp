@@ -160,8 +160,47 @@ enum class ssienr_bits : uint8_t
     ssi_en = 0,
 };
 
-using ctrl0 = rw_reg<addrs::xip_ssi_base, 0x00>;
-using ctrl1 = rw_reg<addrs::xip_ssi_base, 0x04>;
+enum class ctrlr0_bits : uint8_t
+{
+    dfs0 = 0,
+    dsf1,
+    dfs2,
+    dfs4,
+    frf0,
+    frf1,
+    scph,
+    scpol,
+    tmod0,
+    tmod1,
+    slv_oe,
+    srl,
+    cfs0,
+    cfs1,
+    cfs2,
+    cfs3,
+    dfs_32_0,
+    dfs_32_1,
+    dfs_32_2,
+    dfs_32_3,
+    dfs_32_4,
+    spi_frf0,
+    spi_frf1,
+    sste = 24
+};
+
+enum class sr_bits : uint8_t
+{
+    busy = 0,
+    tfnf,
+    tfe,
+    rfne,
+    rff,
+    txt,
+    dcol,
+};
+
+using ctrlr0 = rw_reg<addrs::xip_ssi_base, 0x00>;
+using ctrlr1 = rw_reg<addrs::xip_ssi_base, 0x04>;
 using ssienr = rw_reg<addrs::xip_ssi_base, 0x08>;
 using mwcr = rw_reg<addrs::xip_ssi_base, 0x0c>;
 using ser = rw_reg<addrs::xip_ssi_base, 0x10>;
@@ -170,7 +209,7 @@ using txftlr = rw_reg<addrs::xip_ssi_base, 0x18>;
 using rxftlr = rw_reg<addrs::xip_ssi_base, 0x1c>;
 using txflr = rw_reg<addrs::xip_ssi_base, 0x20>;
 using rxflr = rw_reg<addrs::xip_ssi_base, 0x24>;
-using sr = rw_reg<addrs::xip_ssi_base, 0x28>;
+using sr = rw_reg<addrs::xip_ssi_base, 0x28, sr_bits>;
 using imr = rw_reg<addrs::xip_ssi_base, 0x2c>;
 using isr = rw_reg<addrs::xip_ssi_base, 0x30>;
 using risr = rw_reg<addrs::xip_ssi_base, 0x34>;
@@ -202,12 +241,12 @@ enum class gpio_pads_bits : uint8_t
     od,
 };
 
-enum class volate_select_bits : uint8_t
+enum class voltage_select_bits : uint8_t
 {
     voltage = 0,
 };
 
-using volate_select = rw_reg<addrs::pads_qspi_base, 0x00, volate_select_bits>;
+using volate_select = rw_reg<addrs::pads_qspi_base, 0x00, voltage_select_bits>;
 using gpio_qspi_sclk = rw_reg<addrs::pads_qspi_base, 0x04, gpio_pads_bits>;
 using gpio_qspi_sd0 = rw_reg<addrs::pads_qspi_base, 0x08, gpio_pads_bits>;
 using gpio_qspi_sd1 = rw_reg<addrs::pads_qspi_base, 0x0c, gpio_pads_bits>;
