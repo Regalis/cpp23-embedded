@@ -36,6 +36,9 @@ using reg_base =
   hwio::volatile_reg<reg_ptr_t, reg_val_t, Base, Offset, BitsType>;
 
 template<reg_ptr_t Base, reg_ptr_t Offset, typename BitsType = unsigned int>
+using ro_reg = hwio::ro<reg_base<Base, Offset, BitsType>>;
+
+template<reg_ptr_t Base, reg_ptr_t Offset, typename BitsType = unsigned int>
 using rw_reg = hwio::rw<reg_base<Base, Offset, BitsType>>;
 
 template<reg_ptr_t Addr, typename BitsType = unsigned int>

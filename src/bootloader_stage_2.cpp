@@ -104,6 +104,17 @@ constexpr static void configure_flash(uint32_t expected_sreg2_value)
     }
 }
 
+static inline void load_main_program()
+{
+    constexpr platform::reg_val_t stack_pointer = 0x10000000 + 0x100;
+    using reset_handler_reg = platform::ro_reg<stack_pointer, 0x4>;
+    platform::reg_val_t reset_hander_addr = reset_handler_reg::value();
+    // TODO: relocate vector table
+    asm volatile("msr msp, %0" : : "r"(stack_pointer) :);
+    asm volatile("bx %0" : : "r"(reset_hander_addr) :);
+    std::unreachable();
+}
+
 extern "C"
 {
     //
@@ -182,10 +193,10 @@ extern "C"
 
         using registers::ssi::spi_ctrlr0_bits;
         constexpr uint32_t ssi_spi_ctrlr0_enter_xip_value =
-          (8 << bit_pos(spi_ctrlr0_bits::addr_l0)) |
-          (4 << bit_pos(spi_ctrlr0_bits::wait_cycles0)) |
-          (0x2 << bit_pos(spi_ctrlr0_bits::inst_l0)) |
-          (0x1 << bit_pos(spi_ctrlr0_bits::trans_type0));
+          (8UL << bit_pos(spi_ctrlr0_bits::addr_l0)) |
+          (4UL << bit_pos(spi_ctrlr0_bits::wait_cycles0)) |
+          (0x2UL << bit_pos(spi_ctrlr0_bits::inst_l0)) |
+          (0x1UL << bit_pos(spi_ctrlr0_bits::trans_type0));
 
         registers::ssi::spi_ctrlr0::set_value(ssi_spi_ctrlr0_enter_xip_value);
 
@@ -204,17 +215,18 @@ extern "C"
 
         // Configure SSI to use continous read mode
         constexpr uint32_t spi_ctrlr0_final_value =
-          (0xa0 << bit_pos(spi_ctrlr0_bits::xip_cmd0)) |
-          (8 << bit_pos(spi_ctrlr0_bits::addr_l0)) |
-          (4 << bit_pos(spi_ctrlr0_bits::wait_cycles0)) |
-          (0 << bit_pos(spi_ctrlr0_bits::inst_l0)) |
-          (0x2 << bit_pos(spi_ctrlr0_bits::trans_type0));
+          (0xa0UL << bit_pos(spi_ctrlr0_bits::xip_cmd0)) |
+          (8UL << bit_pos(spi_ctrlr0_bits::addr_l0)) |
+          (4UL << bit_pos(spi_ctrlr0_bits::wait_cycles0)) |
+          (0UL << bit_pos(spi_ctrlr0_bits::inst_l0)) |
+          (0x2UL << bit_pos(spi_ctrlr0_bits::trans_type0));
 
         registers::ssi::spi_ctrlr0::set_value(spi_ctrlr0_final_value);
 
         // Enable SSI
         registers::ssi::ssienr::set_value(1);
 
-        // TODO: chainload into the main program
+        load_main_program();
+        std::unreachable();
     }
 }
