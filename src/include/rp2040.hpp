@@ -24,6 +24,7 @@
 
 #include <cstdint>
 
+#include "bitops.hpp"
 #include "hwio.hpp"
 
 namespace platform {
@@ -40,7 +41,7 @@ using rw_reg = hwio::rw<reg_base<Base, Offset, BitsType>>;
 template<reg_ptr_t Addr, typename BitsType = unsigned int>
 using rw_reg_direct = hwio::rw<reg_base<Addr, 0, BitsType>>;
 
-enum pins : uint8_t
+enum class pins : platform::reg_val_t
 {
     gpio0 = 0,
     gpio1,
@@ -82,29 +83,29 @@ constexpr static platform::reg_ptr_t resets_base = 0x4000c000;
 constexpr static platform::reg_ptr_t pads_qspi_base = 0x40020000;
 constexpr static platform::reg_ptr_t io_bank0_base = 0x40014000;
 
-template<uint8_t pin_no>
+template<platform::pins pin_no>
 struct gpio_ctrl_for
 {
     constexpr static reg_ptr_t base = io_bank0_base;
     constexpr static reg_ptr_t offset =
-      ((sizeof(platform::reg_val_t) * 2) * pin_no +
+      ((sizeof(platform::reg_val_t) * 2) * bit(pin_no) +
        sizeof(platform::reg_val_t));
     constexpr static reg_ptr_t addr = base + offset;
 };
 
-template<uint8_t pin_no>
+template<platform::pins pin_no>
 struct gpio_status_for
 {
     constexpr static reg_ptr_t base = io_bank0_base;
     constexpr static reg_ptr_t offset =
-      ((sizeof(platform::reg_val_t) * 2) * pin_no);
+      ((sizeof(platform::reg_val_t) * 2) * bit(pin_no));
 };
 }
 
-template<uint8_t pin_no>
+template<platform::pins pin_no>
 using gpio_ctrl = rw_reg_direct<addrs::gpio_ctrl_for<pin_no>::addr>;
 
-template<uint8_t pin_no>
+template<platform::pins pin_no>
 using gpio_status = rw_reg_direct<addrs::gpio_status_for<pin_no>::addr>;
 
 using cpuid = rw_reg<addrs::sio_base, 0>;
@@ -122,7 +123,7 @@ using gpio_oe_set = rw_reg<addrs::sio_base, 0x024>;
 using gpio_oe_clr = rw_reg<addrs::sio_base, 0x028>;
 using gpio_oe_xor = rw_reg<addrs::sio_base, 0x02c>;
 
-enum reset_bits : uint8_t
+enum class reset_bits : platform::reg_val_t
 {
     adc = 0,
     busctrl,
@@ -229,7 +230,7 @@ using spi_ctrlr0 = rw_reg<addrs::xip_ssi_base, 0xf4>;
 using txd_drive_edge = rw_reg<addrs::xip_ssi_base, 0xf8>;
 }
 
-enum class gpio_pads_bits : uint8_t
+enum class gpio_pads_bits : platform::reg_val_t
 {
     slewfast = 0,
     schmitt,
@@ -241,7 +242,7 @@ enum class gpio_pads_bits : uint8_t
     od,
 };
 
-enum class voltage_select_bits : uint8_t
+enum class voltage_select_bits : platform::reg_val_t
 {
     voltage = 0,
 };

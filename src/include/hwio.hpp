@@ -26,6 +26,8 @@
 #include <type_traits>
 #include <utility>
 
+#include "bitops.hpp"
+
 namespace hwio {
 
 template<typename RegPtrType,
@@ -69,26 +71,19 @@ template<typename RegPtrType,
 using volatile_reg =
   reg<volatile RegPtrType, RegValueType, BaseAddr, Offset, BitsType>;
 
+// clang-format off
 template<typename T>
-concept hwio_reg = requires
-{
+concept hwio_reg = requires {
     typename T::reg_value_t;
     typename T::reg_addr_t;
     typename T::reg_ptr_t;
     typename T::bits_t;
 
-    // clang-format off
     { T::base } -> std::same_as<const typename T::reg_addr_t&>;
     { T::offset } -> std::same_as<const typename T::reg_addr_t&>;
     { T::addr } -> std::same_as<const typename T::reg_addr_t&>;
-    // clang-format on
 };
-
-template<typename T>
-concept strong_bits = requires(T t)
-{
-    std::to_underlying(t);
-};
+// clang-format on
 
 template<typename T>
 class ro
@@ -101,13 +96,13 @@ class ro
 
     constexpr static typename T::reg_value_t get_bit(typename T::bits_t bit_no)
     {
-        return T::cref() & (1 << bit_no);
+        return bitwise_and(T::cref(), bit_value(bit_no));
     }
 
     constexpr static typename T::reg_value_t get_bits_with_mask(
       typename T::reg_value_t mask)
     {
-        return T::cref() & mask;
+        return bitwise_and(T::cref(), mask);
     }
 };
 
@@ -115,54 +110,19 @@ template<typename T>
 class wo
 {
   public:
-    constexpr static void set_bit(std::integral auto bit_no)
+    constexpr static void set_bits(const valid_bit_position auto&... bit_no)
     {
-        T::ref() = T::ref() | (1 << bit_no);
+        ::set_bits(T::ref(), bit_no...);
     }
 
-    constexpr static void set_bit(strong_bits auto bit_no)
+    constexpr static void reset_bits(const valid_bit_position auto&... bit_no)
     {
-        set_bit(std::to_underlying(bit_no));
+        ::reset_bits(T::ref(), bit_no...);
     }
 
-    constexpr static void set_bits(std::integral auto... bit_no)
+    constexpr static void toggle(const valid_bit_position auto&... bit_no)
     {
-        T::ref() = T::ref() | ((1 << bit_no) | ...);
-    }
-
-    constexpr static void set_bits(strong_bits auto... bit_no)
-    {
-        set_bits(std::to_underlying(bit_no)...);
-    }
-
-    constexpr static void reset_bit(std::integral auto bit_no)
-    {
-        T::ref() = T::ref() & ~(1 << bit_no);
-    }
-
-    constexpr static void reset_bit(strong_bits auto bit_no)
-    {
-        reset_bit(std::to_underlying(bit_no));
-    }
-
-    constexpr static void reset_bits(std::integral auto... bit_no)
-    {
-        T::ref() = T::ref() & ~((1 << bit_no) | ...);
-    }
-
-    constexpr static void reset_bits(strong_bits auto... bit_no)
-    {
-        reset_bits(std::to_underlying(bit_no)...);
-    }
-
-    constexpr static void toggle(std::integral auto bit_no)
-    {
-        T::ref() = T::ref() ^ (1 << bit_no);
-    }
-
-    constexpr static void toggle(strong_bits auto bit_no)
-    {
-        toggle(std::to_underlying(bit_no));
+        ::toggle_bits(T::ref(), bit_no...);
     }
 
     constexpr static void set_value(typename T::reg_value_t value)
@@ -179,8 +139,7 @@ class wo
 
 template<typename T>
 class rw : public ro<T>, public wo<T>
-{
-};
+{};
 
 }
 #endif

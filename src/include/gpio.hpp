@@ -48,22 +48,22 @@ static constexpr void function_select(functions func)
 
 static constexpr void set_as_output(platform::pins pin_no)
 {
-    platform::registers::gpio_oe_set::set_bit(pin_no);
+    platform::registers::gpio_oe_set::set_bits(pin_no);
 }
 
 static constexpr void set_high(platform::pins pin_no)
 {
-    platform::registers::gpio_out_set::set_bit(pin_no);
+    platform::registers::gpio_out_set::set_bits(pin_no);
 }
 
 static constexpr void set_low(platform::pins pin_no)
 {
-    platform::registers::gpio_out_clr::set_bit(pin_no);
+    platform::registers::gpio_out_clr::set_bits(pin_no);
 }
 
 static constexpr void toggle(platform::pins pin_no)
 {
-    platform::registers::gpio_out_xor::set_bit(pin_no);
+    platform::registers::gpio_out_xor::set_bits(pin_no);
 }
 
 template<platform::pins pin_no>

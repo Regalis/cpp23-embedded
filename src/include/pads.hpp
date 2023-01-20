@@ -22,6 +22,7 @@
 #ifndef PADS_HPP
 #define PADS_HPP
 
+#include "bitops.hpp"
 #include "rp2040.hpp"
 
 namespace pads {
@@ -80,15 +81,14 @@ struct qspi
 };
 
 template<typename T>
-concept pad_descriptor = requires
-{
-    typename T::pad;
-    requires std::is_scoped_enum_v<typename T::pad>;
+concept pad_descriptor = requires {
+                             typename T::pad;
+                             requires std::is_scoped_enum_v<typename T::pad>;
 
-    // clang-format off
+                             // clang-format off
     { T::base_addr } -> std::same_as<const platform::reg_ptr_t&>;
-    // clang-format on
-};
+                             // clang-format on
+                         };
 
 enum class drive_strength : platform::reg_val_t
 {
@@ -124,29 +124,28 @@ class pad
 
     constexpr static void output_enable()
     {
-        pad_reg::reset_bit(pad_bits::od);
+        pad_reg::reset_bits(pad_bits::od);
     }
 
     constexpr static void output_disable()
     {
-        pad_reg::set_bit(pad_bits::od);
+        pad_reg::set_bits(pad_bits::od);
     }
 
     constexpr static void input_enable()
     {
-        pad_reg::set_bit(pad_bits::ie);
+        pad_reg::set_bits(pad_bits::ie);
     }
 
     constexpr static void input_disable()
     {
-        pad_reg::reset_bit(pad_bits::ie);
+        pad_reg::reset_bits(pad_bits::ie);
     }
 
     constexpr static void set_drive_strength(drive_strength strength)
     {
         constexpr platform::reg_val_t drive_bits_mask =
-          (1 << std::to_underlying(pad_bits::drive0)) |
-          (1 << std::to_underlying(pad_bits::drive1));
+          bitmask(pad_bits::drive0, pad_bits::drive1);
 
         pad_reg::set_value((pad_reg::value() & ~drive_bits_mask) |
                            (std::to_underlying(strength)
@@ -155,40 +154,40 @@ class pad
 
     constexpr static void pull_up_enable()
     {
-        pad_reg::set_bit(pad_bits::pue);
+        pad_reg::set_bits(pad_bits::pue);
     }
 
     constexpr static void pull_up_disable()
     {
-        pad_reg::reset_bit(pad_bits::pue);
+        pad_reg::reset_bits(pad_bits::pue);
     }
 
     constexpr static void pull_down_enable()
     {
-        pad_reg::set_bit(pad_bits::pde);
+        pad_reg::set_bits(pad_bits::pde);
     }
 
     constexpr static void pull_down_disable()
     {
-        pad_reg::reset_bit(pad_bits::pde);
+        pad_reg::reset_bits(pad_bits::pde);
     }
 
     constexpr static void schmitt_trigger_enbale()
     {
-        pad_reg::set_bit(pad_bits::schmitt);
+        pad_reg::set_bits(pad_bits::schmitt);
     }
 
     constexpr static void schmitt_trigger_disable()
     {
-        pad_reg::reset_bit(pad_bits::schmitt);
+        pad_reg::reset_bits(pad_bits::schmitt);
     }
 
     constexpr static void set_slew_date(slew_rate rate)
     {
         if (rate == slew_rate::slow) {
-            pad_reg::reset_bit(pad_bits::slewfast);
+            pad_reg::reset_bits(pad_bits::slewfast);
         } else {
-            pad_reg::set_bit(pad_bits::slewfast);
+            pad_reg::set_bits(pad_bits::slewfast);
         }
     }
 };

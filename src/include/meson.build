@@ -18,9 +18,11 @@
 #
 
 headers += files([
-  'hwio.hpp',
+  'bitops.hpp',
+  'delay.hpp',
   'gpio.hpp',
+  'hwio.hpp',
+  'pads.hpp',
   'reset.hpp',
   'rp2040.hpp',
-  'pads.hpp',
 ])

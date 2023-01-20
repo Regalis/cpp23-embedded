@@ -29,12 +29,12 @@ using subsystems = platform::registers::reset_bits;
 
 constexpr static void reset_subsystem(subsystems subsystem)
 {
-    platform::registers::reset::set_bit(subsystem);
+    platform::registers::reset::set_bits(subsystem);
 }
 
 constexpr static void release_subsystem(subsystems subsystem)
 {
-    platform::registers::reset::reset_bit(subsystem);
+    platform::registers::reset::reset_bits(subsystem);
 }
 
 constexpr static void release_subsystem_wait(subsystems subsystem)
