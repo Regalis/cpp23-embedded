@@ -156,12 +156,12 @@ using wdsel = rw_reg<addrs::resets_base, 0x4, reset_bits>;
 using reset_done = rw_reg<addrs::resets_base, 0x8, reset_bits>;
 
 namespace ssi {
-enum class ssienr_bits : uint8_t
+enum class ssienr_bits : reg_val_t
 {
     ssi_en = 0,
 };
 
-enum class ctrlr0_bits : uint8_t
+enum class ctrlr0_bits : reg_val_t
 {
     dfs0 = 0,
     dsf1,
@@ -189,7 +189,35 @@ enum class ctrlr0_bits : uint8_t
     sste = 24
 };
 
-enum class sr_bits : uint8_t
+enum class spi_ctrlr0_bits : reg_val_t
+{
+    trans_type0 = 0,
+    trans_type1,
+    addr_l0,
+    addr_l1,
+    addr_l2,
+    addr_l3,
+    inst_l0 = 8,
+    inst_l1,
+    wait_cycles0 = 11,
+    wait_cycles1,
+    wait_cycles2,
+    wait_cycles3,
+    wait_cycles4,
+    spi_ddr_en,
+    inst_ddr_en,
+    spi_rxds_en,
+    xip_cmd0 = 24,
+    xip_cmd1,
+    xip_cmd2,
+    xip_cmd3,
+    xip_cmd4,
+    xip_cmd5,
+    xip_cmd6,
+    xip_cmd7,
+};
+
+enum class sr_bits : reg_val_t
 {
     busy = 0,
     tfnf,
@@ -200,7 +228,7 @@ enum class sr_bits : uint8_t
     dcol,
 };
 
-using ctrlr0 = rw_reg<addrs::xip_ssi_base, 0x00>;
+using ctrlr0 = rw_reg<addrs::xip_ssi_base, 0x00, ctrlr0_bits>;
 using ctrlr1 = rw_reg<addrs::xip_ssi_base, 0x04>;
 using ssienr = rw_reg<addrs::xip_ssi_base, 0x08>;
 using mwcr = rw_reg<addrs::xip_ssi_base, 0x0c>;
@@ -226,11 +254,11 @@ using idr = rw_reg<addrs::xip_ssi_base, 0x58>;
 using ssi_version_id = rw_reg<addrs::xip_ssi_base, 0x5c>;
 using dr0 = rw_reg<addrs::xip_ssi_base, 0x60>;
 using rx_sample_dly = rw_reg<addrs::xip_ssi_base, 0xf0>;
-using spi_ctrlr0 = rw_reg<addrs::xip_ssi_base, 0xf4>;
+using spi_ctrlr0 = rw_reg<addrs::xip_ssi_base, 0xf4, spi_ctrlr0_bits>;
 using txd_drive_edge = rw_reg<addrs::xip_ssi_base, 0xf8>;
 }
 
-enum class gpio_pads_bits : platform::reg_val_t
+enum class gpio_pads_bits : reg_val_t
 {
     slewfast = 0,
     schmitt,
@@ -242,7 +270,7 @@ enum class gpio_pads_bits : platform::reg_val_t
     od,
 };
 
-enum class voltage_select_bits : platform::reg_val_t
+enum class voltage_select_bits : reg_val_t
 {
     voltage = 0,
 };

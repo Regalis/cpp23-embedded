@@ -135,9 +135,6 @@ extern "C"
     {
         using namespace platform;
         constexpr uint32_t flash_clk_div = 2;
-        constexpr uint8_t w25q080_cmd_read = 0xeb;
-        constexpr uint8_t w25q080_wait_cycles = 4;
-        constexpr uint8_t w25q080_mode_continous_read = 0xa0;
 
         configure_pads();
 
@@ -183,9 +180,38 @@ extern "C"
 
         registers::ssi::ctrlr0::set_value(ssi_ctrlr0_enter_xip_value);
 
-        // TODO: configure SPI_CTRLR0
-        // TODO: configure the flash - put it into the continous read mode
-        // TODO: configure SSI to use continous read mode
+        using registers::ssi::spi_ctrlr0_bits;
+        constexpr uint32_t ssi_spi_ctrlr0_enter_xip_value =
+          (8 << bit_pos(spi_ctrlr0_bits::addr_l0)) |
+          (4 << bit_pos(spi_ctrlr0_bits::wait_cycles0)) |
+          (0x2 << bit_pos(spi_ctrlr0_bits::inst_l0)) |
+          (0x1 << bit_pos(spi_ctrlr0_bits::trans_type0));
+
+        registers::ssi::spi_ctrlr0::set_value(ssi_spi_ctrlr0_enter_xip_value);
+
+        // Enable SSI
+        registers::ssi::ssienr::set_value(1);
+
+        // Configure the flash - put it into the continous read mode
+        constexpr uint8_t w25q080_cmd_read = 0xeb;
+        constexpr uint8_t w25q080_mode_continous_read = 0xa0;
+        registers::ssi::dr0::set_value(w25q080_cmd_read);
+        registers::ssi::dr0::set_value(w25q080_mode_continous_read);
+        wait_ssi_ready();
+
+        // Disable SSI (required for reconfiguration)
+        registers::ssi::ssienr::set_value(0);
+
+        // Configure SSI to use continous read mode
+        constexpr uint32_t spi_ctrlr0_final_value =
+          (0xa0 << bit_pos(spi_ctrlr0_bits::xip_cmd0)) |
+          (8 << bit_pos(spi_ctrlr0_bits::addr_l0)) |
+          (4 << bit_pos(spi_ctrlr0_bits::wait_cycles0)) |
+          (0 << bit_pos(spi_ctrlr0_bits::inst_l0)) |
+          (0x2 << bit_pos(spi_ctrlr0_bits::trans_type0));
+
+        registers::ssi::spi_ctrlr0::set_value(spi_ctrlr0_final_value);
+
         // TODO: chainload into the main program
     }
 }
