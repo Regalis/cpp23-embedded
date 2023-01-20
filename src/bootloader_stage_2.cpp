@@ -212,6 +212,9 @@ extern "C"
 
         registers::ssi::spi_ctrlr0::set_value(spi_ctrlr0_final_value);
 
+        // Enable SSI
+        registers::ssi::ssienr::set_value(1);
+
         // TODO: chainload into the main program
     }
 }
