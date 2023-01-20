@@ -35,19 +35,19 @@ concept weakly_typed_bit = std::integral<T>;
 template<typename T>
 concept valid_bit_position = weakly_typed_bit<T> || strongly_typed_bit<T>;
 
-constexpr auto bit(const weakly_typed_bit auto& bit_position)
+constexpr auto bit_pos(const weakly_typed_bit auto& bit_position)
 {
     return bit_position;
 }
 
-constexpr auto bit(const strongly_typed_bit auto& bit_position)
+constexpr auto bit_pos(const strongly_typed_bit auto& bit_position)
 {
     return std::to_underlying(bit_position);
 }
 
 constexpr auto bit_value(const valid_bit_position auto&... bit_position)
 {
-    return ((1UL << bit(bit_position)) | ...);
+    return ((1UL << bit_pos(bit_position)) | ...);
 }
 
 constexpr auto bitwise_or(const std::semiregular auto&... value)

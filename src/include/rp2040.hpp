@@ -88,7 +88,7 @@ struct gpio_ctrl_for
 {
     constexpr static reg_ptr_t base = io_bank0_base;
     constexpr static reg_ptr_t offset =
-      ((sizeof(platform::reg_val_t) * 2) * bit(pin_no) +
+      ((sizeof(platform::reg_val_t) * 2) * bit_pos(pin_no) +
        sizeof(platform::reg_val_t));
     constexpr static reg_ptr_t addr = base + offset;
 };
@@ -98,7 +98,7 @@ struct gpio_status_for
 {
     constexpr static reg_ptr_t base = io_bank0_base;
     constexpr static reg_ptr_t offset =
-      ((sizeof(platform::reg_val_t) * 2) * bit(pin_no));
+      ((sizeof(platform::reg_val_t) * 2) * bit_pos(pin_no));
 };
 }
 

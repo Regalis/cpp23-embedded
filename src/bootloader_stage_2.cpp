@@ -40,9 +40,9 @@ constexpr static inline void configure_pads()
 constexpr static void wait_ssi_ready()
 {
     constexpr uint32_t transmit_fifo_empty =
-      (1UL << std::to_underlying(platform::registers::ssi::sr_bits::tfe));
+      bit_value(platform::registers::ssi::sr_bits::tfe);
     constexpr uint32_t busy_flag =
-      (1UL << std::to_underlying(platform::registers::ssi::sr_bits::busy));
+      bit_value(platform::registers::ssi::sr_bits::busy);
 
     while (true) {
         platform::reg_val_t status_register =
@@ -177,10 +177,9 @@ extern "C"
         constexpr uint32_t xip_32_data_bits = 31;
         constexpr uint32_t xip_eeprom_read_mode = 0x3;
         constexpr uint32_t ssi_ctrlr0_enter_xip_value =
-          (xip_quad_spi_half_duplex_mode
-           << std::to_underlying(ctrlr0_bits::spi_frf0)) |
-          (xip_32_data_bits << std::to_underlying(ctrlr0_bits::dfs_32_0)) |
-          (xip_eeprom_read_mode << std::to_underlying(ctrlr0_bits::tmod0));
+          (xip_quad_spi_half_duplex_mode << bit_pos(ctrlr0_bits::spi_frf0)) |
+          (xip_32_data_bits << bit_pos(ctrlr0_bits::dfs_32_0)) |
+          (xip_eeprom_read_mode << bit_pos(ctrlr0_bits::tmod0));
 
         registers::ssi::ctrlr0::set_value(ssi_ctrlr0_enter_xip_value);
 
