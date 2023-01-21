@@ -80,11 +80,16 @@ enum class pins : platform::reg_val_t
 
 namespace registers {
 namespace addrs {
+constexpr static platform::reg_ptr_t xip_base = 0x10000000;
 constexpr static platform::reg_ptr_t xip_ssi_base = 0x18000000;
 constexpr static platform::reg_ptr_t sio_base = 0xd0000000;
 constexpr static platform::reg_ptr_t resets_base = 0x4000c000;
 constexpr static platform::reg_ptr_t pads_qspi_base = 0x40020000;
 constexpr static platform::reg_ptr_t io_bank0_base = 0x40014000;
+constexpr static platform::reg_ptr_t ppb_base = 0xe0000000;
+
+// TODO: move to a dedicated header file
+constexpr static platform::reg_ptr_t m0plus_vtor_offset = 0x0000ed08;
 
 template<platform::pins pin_no>
 struct gpio_ctrl_for

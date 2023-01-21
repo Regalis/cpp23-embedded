@@ -19,22 +19,41 @@
  *
  */
 
+#include "bitops.hpp"
 #include "pads.hpp"
 #include "rp2040.hpp"
 
 constexpr static inline void configure_pads()
 {
-    // TODO: possible optimization: use precalculated value for this
-    // register (the pads<> class needs to be updated to support this feature).
-    // We can achieve the same thing with a single write instead of double
-    // read-modify-write.
-    pads::qspi_sclk::set_drive_strength(pads::drive_strength::strength_8mA);
-    pads::qspi_sclk::set_slew_date(pads::slew_rate::fast);
+    pads::qspi_sclk::set_value(pads::slew_rate::fast,
+                               pads::schmitt_trigger::default_after_reset,
+                               pads::pull_down::default_after_reset,
+                               pads::pull_up::default_after_reset,
+                               pads::drive_strength::strength_8mA,
+                               pads::input::default_after_reset,
+                               pads::output::default_after_reset);
 
-    pads::qspi_sd0::schmitt_trigger_disable();
-    pads::qspi_sd1::schmitt_trigger_disable();
-    pads::qspi_sd2::schmitt_trigger_disable();
-    pads::qspi_sd3::schmitt_trigger_disable();
+    const auto sd_value = pads::qspi_sd0::calculate_value(
+      pads::slew_rate::default_after_reset,
+      pads::schmitt_trigger::disable,
+      pads::pull_down::default_after_reset,
+      pads::pull_up::default_after_reset,
+      pads::drive_strength::default_after_reset,
+      pads::input::default_after_reset,
+      pads::output::default_after_reset);
+
+    // TODO: unfortunetly - this requires further optimization;
+    //       GCC generates multiple LDR + STR instructions;
+    //       we can do better:
+    //       str rX [reg_with_QSPI_BASE, SD0_OFFSET]
+    //       str rX [reg_with_QSPI_BASE, SD1_OFFSET]
+    //       str rX [reg_with_QSPI_BASE, SD2_OFFSET]
+    //       str rX [reg_with_QSPI_BASE, SD3_OFFSET]
+    //
+    pads::qspi_sd0::pad_reg::set_value(sd_value);
+    pads::qspi_sd1::pad_reg::set_value(sd_value);
+    pads::qspi_sd2::pad_reg::set_value(sd_value);
+    pads::qspi_sd3::pad_reg::set_value(sd_value);
 }
 
 constexpr static void wait_ssi_ready()
@@ -106,12 +125,17 @@ constexpr static void configure_flash(uint32_t expected_sreg2_value)
 
 static inline void load_main_program()
 {
-    constexpr platform::reg_val_t stack_pointer = 0x10000000 + 0x100;
-    using reset_handler_reg = platform::ro_reg<stack_pointer, 0x4>;
-    platform::reg_val_t reset_hander_addr = reset_handler_reg::value();
-    // TODO: relocate vector table
-    asm volatile("msr msp, %0" : : "r"(stack_pointer) :);
-    asm volatile("bx %0" : : "r"(reset_hander_addr) :);
+    // Vector table should be placed right after the bootloader
+    constexpr platform::reg_val_t vector_table_addr =
+      platform::registers::addrs::xip_base + 0x100;
+    constexpr platform::reg_val_t vtor_table_reg_addr =
+      platform::registers::addrs::ppb_base +
+      platform::registers::addrs::m0plus_vtor_offset;
+
+    // TODO: Set stack pointer
+    // TODO: Relocate vector table
+    // TODO: Call reset handler via the vector table
+
     std::unreachable();
 }
 

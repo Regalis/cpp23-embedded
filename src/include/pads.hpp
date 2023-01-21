@@ -90,18 +90,58 @@ concept pad_descriptor = requires {
                              // clang-format on
                          };
 
+// TODO: different reset values for QSPI and GPIO blocks...
+// FIXME: different reset values for QSPI and GPIO blocks...
+
 enum class drive_strength : platform::reg_val_t
 {
     strength_2mA = 0x00,
     strength_4mA = 0x01,
     strength_8mA = 0x02,
     strength_12mA = 0x03,
+    default_after_reset = strength_4mA,
 };
 
 enum class slew_rate : platform::reg_val_t
 {
     slow = 0,
     fast,
+    default_after_reset = slow,
+};
+
+enum class schmitt_trigger : platform::reg_val_t
+{
+    disable = 0,
+    enable,
+    default_after_reset = enable,
+};
+
+enum class pull_down : platform::reg_val_t
+{
+    disable = 0,
+    enable,
+    default_after_reset = disable,
+};
+
+enum class pull_up : platform::reg_val_t
+{
+    disable = 0,
+    enable,
+    default_after_reset = disable,
+};
+
+enum class input : platform::reg_val_t
+{
+    disable = 0,
+    enable,
+    default_after_reset = enable,
+};
+
+enum class output : platform::reg_val_t
+{
+    enable = 0,
+    disable,
+    default_after_reset = enable,
 };
 
 template<pad_descriptor T, typename T::pad specific_pad>
@@ -121,6 +161,46 @@ class pad
     using pad_bits = platform::registers::gpio_pads_bits;
     using pad_reg =
       platform::rw_reg<T::base_addr, offset_addr(specific_pad), pad_bits>;
+
+    constexpr static platform::reg_val_t calculate_value(
+      pads::slew_rate slew_rate,
+      pads::schmitt_trigger schmitt_trigger,
+      pads::pull_down pull_down,
+      pads::pull_up pull_up,
+      pads::drive_strength drive_strength,
+      pads::input input,
+      pads::output output)
+    {
+        using platform::registers::gpio_pads_bits;
+        const platform::reg_val_t target_value = bitwise_or(
+          (std::to_underlying(slew_rate) << bit_pos(gpio_pads_bits::slewfast)),
+          (std::to_underlying(schmitt_trigger)
+           << bit_pos(gpio_pads_bits::schmitt)),
+          (std::to_underlying(pull_down) << bit_pos(gpio_pads_bits::pde)),
+          (std::to_underlying(pull_up) << bit_pos(gpio_pads_bits::pue)),
+          (std::to_underlying(drive_strength)
+           << bit_pos(gpio_pads_bits::drive0)),
+          (std::to_underlying(input) << bit_pos(gpio_pads_bits::ie)),
+          (std::to_underlying(output) << bit_pos(gpio_pads_bits::od)));
+        return target_value;
+    }
+
+    constexpr static void set_value(pads::slew_rate slew_rate,
+                                    pads::schmitt_trigger schmitt_trigger,
+                                    pads::pull_down pull_down,
+                                    pads::pull_up pull_up,
+                                    pads::drive_strength drive_strength,
+                                    pads::input input,
+                                    pads::output output)
+    {
+        pad_reg::set_value(calculate_value(slew_rate,
+                                           schmitt_trigger,
+                                           pull_down,
+                                           pull_up,
+                                           drive_strength,
+                                           input,
+                                           output));
+    }
 
     constexpr static void output_enable()
     {
@@ -147,9 +227,9 @@ class pad
         constexpr platform::reg_val_t drive_bits_mask =
           bitmask(pad_bits::drive0, pad_bits::drive1);
 
-        pad_reg::set_value((pad_reg::value() & ~drive_bits_mask) |
-                           (std::to_underlying(strength)
-                            << std::to_underlying(pad_bits::drive0)));
+        pad_reg::set_value(
+          (pad_reg::value() & ~drive_bits_mask) |
+          (std::to_underlying(strength) << bit_pos(pad_bits::drive0)));
     }
 
     constexpr static void pull_up_enable()
@@ -194,6 +274,7 @@ class pad
 
 template<typename qspi::pad specific_pad>
 using qspi_pad = pad<qspi, specific_pad>;
+
 using qspi_sclk = qspi_pad<qspi::pad::qspi_sclk>;
 using qspi_sd0 = qspi_pad<qspi::pad::qspi_sd0>;
 using qspi_sd1 = qspi_pad<qspi::pad::qspi_sd1>;
