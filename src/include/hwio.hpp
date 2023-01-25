@@ -86,7 +86,7 @@ concept hwio_reg = requires {
 // clang-format on
 
 template<typename T>
-class ro
+class ro : public T
 {
   public:
     constexpr static typename T::reg_value_t value()
@@ -107,7 +107,7 @@ class ro
 };
 
 template<typename T>
-class wo
+class wo : public T
 {
   public:
     constexpr static void set_bits(const valid_bit_position auto&... bit_no)

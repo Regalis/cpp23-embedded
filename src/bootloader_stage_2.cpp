@@ -23,7 +23,7 @@
 #include "pads.hpp"
 #include "rp2040.hpp"
 
-constexpr static inline void configure_pads()
+static inline void configure_pads()
 {
     pads::qspi_sclk::set_value(pads::slew_rate::fast,
                                pads::schmitt_trigger::default_after_reset,
@@ -32,6 +32,24 @@ constexpr static inline void configure_pads()
                                pads::drive_strength::strength_8mA,
                                pads::input::default_after_reset,
                                pads::output::default_after_reset);
+
+    //
+    // pads::qspi_sd0::pad_reg::set_value(sd_value);
+    // pads::qspi_sd1::pad_reg::set_value(sd_value);
+    // pads::qspi_sd2::pad_reg::set_value(sd_value);
+    // pads::qspi_sd3::pad_reg::set_value(sd_value);
+    //
+    // unfortunetly - the above core requires further optimization;
+    //       GCC generates multiple LDR + STR instructions;
+    //       we can do better:
+    //
+    //       str rX [reg_with_QSPI_BASE, SD0_OFFSET]
+    //       str rX [reg_with_QSPI_BASE, SD1_OFFSET]
+    //       str rX [reg_with_QSPI_BASE, SD2_OFFSET]
+    //       str rX [reg_with_QSPI_BASE, SD3_OFFSET]
+    //
+    //       (solved with 'asm volatile'):
+    //
 
     const auto sd_value = pads::qspi_sd0::calculate_value(
       pads::slew_rate::default_after_reset,
@@ -42,18 +60,24 @@ constexpr static inline void configure_pads()
       pads::input::default_after_reset,
       pads::output::default_after_reset);
 
-    // TODO: unfortunetly - this requires further optimization;
-    //       GCC generates multiple LDR + STR instructions;
-    //       we can do better:
-    //       str rX [reg_with_QSPI_BASE, SD0_OFFSET]
-    //       str rX [reg_with_QSPI_BASE, SD1_OFFSET]
-    //       str rX [reg_with_QSPI_BASE, SD2_OFFSET]
-    //       str rX [reg_with_QSPI_BASE, SD3_OFFSET]
-    //
-    pads::qspi_sd0::pad_reg::set_value(sd_value);
-    pads::qspi_sd1::pad_reg::set_value(sd_value);
-    pads::qspi_sd2::pad_reg::set_value(sd_value);
-    pads::qspi_sd3::pad_reg::set_value(sd_value);
+    constexpr auto qspi_base = pads::qspi::base_addr;
+    constexpr auto qspi_sd0_offset = pads::qspi_sd0::pad_reg::offset;
+    constexpr auto qspi_sd1_offset = pads::qspi_sd1::pad_reg::offset;
+    constexpr auto qspi_sd2_offset = pads::qspi_sd2::pad_reg::offset;
+    constexpr auto qspi_sd3_offset = pads::qspi_sd3::pad_reg::offset;
+
+    asm volatile("str %[value], [%[base], %[offset0]]\n\t"
+                 "str %[value], [%[base], %[offset1]]\n\t"
+                 "str %[value], [%[base], %[offset2]]\n\t"
+                 "str %[value], [%[base], %[offset3]]\n\t"
+                 :
+                 : [value] "r"(sd_value),
+                   [base] "r"(qspi_base),
+                   [offset0] "i"(qspi_sd0_offset),
+                   [offset1] "i"(qspi_sd1_offset),
+                   [offset2] "i"(qspi_sd2_offset),
+                   [offset3] "i"(qspi_sd3_offset)
+                 :);
 }
 
 constexpr static void wait_ssi_ready()
@@ -132,9 +156,21 @@ static inline void load_main_program()
       platform::registers::addrs::ppb_base +
       platform::registers::addrs::m0plus_vtor_offset;
 
-    // TODO: Set stack pointer
-    // TODO: Relocate vector table
-    // TODO: Call reset handler via the vector table
+    using cpu_vtor_reg = platform::rw_reg_direct<vtor_table_reg_addr>;
+    using stack_pointer_reg = platform::ro_reg<vector_table_addr, 0x0>;
+    using reset_hander_reg = platform::ro_reg<vector_table_addr, 0x4>;
+
+    cpu_vtor_reg::set_value(vector_table_addr);
+
+    const auto stack_pointer = stack_pointer_reg::value();
+    const auto reset_hander_addr = reset_hander_reg::value();
+
+    asm volatile(
+      "msr msp, %[stack_ptr]\n\t"
+      "bx %[reset_handler]\n\t"
+      :
+      : [stack_ptr] "r"(stack_pointer), [reset_handler] "r"(reset_hander_addr)
+      :);
 
     std::unreachable();
 }
