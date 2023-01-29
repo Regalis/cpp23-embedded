@@ -40,6 +40,7 @@ compiler = meson.get_compiler('cpp', native: false)
 add_project_arguments(
   compiler.get_supported_arguments([
     '-std=c++23',
+    '-g',
     '-Wall',
     '-Wextra',
     '-Wformat=2',
@@ -66,6 +67,7 @@ add_project_arguments(
 add_project_link_arguments(
   #  '-nolibc',
   '-nostartfiles',
+  '-mthumb',
   #'-nostdlib',
   #'-ffunction-sections',
   '-Wl,--script=' + (

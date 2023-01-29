@@ -89,7 +89,7 @@ constexpr static platform::reg_ptr_t io_bank0_base = 0x40014000;
 constexpr static platform::reg_ptr_t ppb_base = 0xe0000000;
 
 // TODO: move to a dedicated header file
-constexpr static platform::reg_ptr_t m0plus_vtor_offset = 0x0000ed08;
+constexpr static platform::reg_ptr_t m0plus_vtor_offset = 0xed08;
 
 template<platform::pins pin_no>
 struct gpio_ctrl_for

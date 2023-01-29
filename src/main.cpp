@@ -32,8 +32,21 @@ int main()
     gpio::pin<pins::gpio25> led0;
     led0.function_select(gpio::functions::sio);
     led0.set_as_output();
+
     while (1) {
-        led0.toggle();
-        delay(0x100000 / 8);
+        for (int i = 0; i < 100; ++i) {
+            led0.toggle();
+            delay(0x100000 / 64);
+        }
+
+        for (int i = 0; i < 100; ++i) {
+            led0.toggle();
+            delay(0x100000 / 32);
+        }
+
+        for (int i = 0; i < 100; ++i) {
+            led0.toggle();
+            delay(0x100000 / 16);
+        }
     }
 }

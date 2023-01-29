@@ -20,10 +20,12 @@
 src = files([
   'main.cpp',
   'init.cpp',
-  #  'bootloader_stage_2.cpp',
+  'bootloader_stage_2.cpp',
+  'interrupts.cpp',
 ])
 
 headers = files([
+  'init.hpp',
 ])
 
 subdir('include/')

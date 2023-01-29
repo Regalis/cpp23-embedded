@@ -19,14 +19,40 @@
  *
  */
 
+#include <algorithm>
+#include <cstdint>
+#include <span>
 #include <utility>
+
+#include "delay.hpp"
+#include "gpio.hpp"
+#include "reset.hpp"
+#include "rp2040.hpp"
 
 int main();
 
 extern "C"
 {
-    void __attribute__((naked)) __regalis_init()
+
+    void __regalis_init()
     {
+        extern std::uint8_t __data_start;
+        extern std::uint8_t __data_end;
+        extern std::uint8_t __data_lma_start;
+
+        extern std::uint8_t __bss_start;
+        extern std::uint8_t __bss_end;
+
+        const std::size_t data_size =
+          static_cast<std::size_t>(&__data_end - &__data_start);
+
+        // Copy .data section from FLASH to SRAM
+        std::copy(
+          &__data_lma_start, &__data_lma_start + data_size, &__data_start);
+
+        // Zero-fill .bss section
+        std::fill(&__bss_start, &__bss_end, 0);
+
         main();
         std::unreachable();
     }

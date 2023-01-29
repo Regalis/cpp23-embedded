@@ -23,6 +23,11 @@
 #include "pads.hpp"
 #include "rp2040.hpp"
 
+extern "C"
+{
+    constexpr static void __regalis_bootloader_wait_ssi_ready();
+}
+
 static inline void configure_pads()
 {
     pads::qspi_sclk::set_value(pads::slew_rate::fast,
@@ -80,25 +85,6 @@ static inline void configure_pads()
                  :);
 }
 
-constexpr static void wait_ssi_ready()
-{
-    constexpr uint32_t transmit_fifo_empty =
-      bit_value(platform::registers::ssi::sr_bits::tfe);
-    constexpr uint32_t busy_flag =
-      bit_value(platform::registers::ssi::sr_bits::busy);
-
-    while (true) {
-        platform::reg_val_t status_register =
-          platform::registers::ssi::sr::value();
-        if (!(status_register & transmit_fifo_empty)) {
-            continue;
-        }
-        if (!(status_register & busy_flag)) {
-            break;
-        }
-    }
-}
-
 enum class read_commands : uint8_t
 {
     read_status = 0x05,
@@ -117,7 +103,7 @@ constexpr static uint32_t read_flash_sreg(read_commands cmd)
     platform::registers::ssi::dr0::set_value(std::to_underlying(cmd));
     // Dummy byte:
     platform::registers::ssi::dr0::set_value(std::to_underlying(cmd));
-    wait_ssi_ready();
+    __regalis_bootloader_wait_ssi_ready();
     // Dummy read:
     platform::registers::ssi::dr0::value();
     return platform::registers::ssi::dr0::value();
@@ -128,14 +114,14 @@ constexpr static void configure_flash(uint32_t expected_sreg2_value)
 {
     platform::registers::ssi::dr0::set_value(
       std::to_underlying(write_commands::write_enable));
-    wait_ssi_ready();
+    __regalis_bootloader_wait_ssi_ready();
     // Discard the response
     platform::registers::ssi::dr0::value();
     platform::registers::ssi::dr0::set_value(
       std::to_underlying(write_commands::cmd_write_status));
     platform::registers::ssi::dr0::set_value(0);
     platform::registers::ssi::dr0::set_value(expected_sreg2_value);
-    wait_ssi_ready();
+    __regalis_bootloader_wait_ssi_ready();
     platform::registers::ssi::dr0::value();
     platform::registers::ssi::dr0::value();
     platform::registers::ssi::dr0::value();
@@ -177,6 +163,26 @@ static inline void load_main_program()
 
 extern "C"
 {
+
+    constexpr static void __regalis_bootloader_wait_ssi_ready()
+    {
+        constexpr uint32_t transmit_fifo_empty =
+          bit_value(platform::registers::ssi::sr_bits::tfe);
+        constexpr uint32_t busy_flag =
+          bit_value(platform::registers::ssi::sr_bits::busy);
+
+        while (true) {
+            platform::reg_val_t status_register =
+              platform::registers::ssi::sr::value();
+            if (!(status_register & transmit_fifo_empty)) {
+                continue;
+            }
+            if (!(status_register & busy_flag)) {
+                break;
+            }
+        }
+    }
+
     //
     // An example bootloader (stage #2) for the Raspberry Pi Pico board
     //
@@ -268,7 +274,7 @@ extern "C"
         constexpr uint8_t w25q080_mode_continous_read = 0xa0;
         registers::ssi::dr0::set_value(w25q080_cmd_read);
         registers::ssi::dr0::set_value(w25q080_mode_continous_read);
-        wait_ssi_ready();
+        __regalis_bootloader_wait_ssi_ready();
 
         // Disable SSI (required for reconfiguration)
         registers::ssi::ssienr::set_value(0);

@@ -19,13 +19,9 @@
  *
  */
 
-#include <cstdint>
+#ifndef INIT_HPP__
+#define INIT_HPP__
 
-static inline void delay(uint32_t num)
-{
-    volatile uint32_t counter = num;
-    while (counter) {
-        counter = counter - 1;
-    }
-}
+extern "C" void __regalis_init();
 
+#endif

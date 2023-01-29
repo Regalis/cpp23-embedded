@@ -3,7 +3,8 @@ toolchain_prefix = 'arm-none-eabi-'
 common_args = [
     '-ffunction-sections',
     '-fdata-sections',
-    '-mcpu=cortex-m0']
+    '-mcpu=cortex-m0plus',
+    '-mthumb',]
 
 [binaries]
 c = toolchain_prefix + 'gcc'
