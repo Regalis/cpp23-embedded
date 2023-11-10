@@ -1,10 +1,13 @@
 [constants]
 toolchain_prefix = 'arm-none-eabi-'
 common_args = [
+    '-nostartfiles',
+    '-mthumb',
     '-ffunction-sections',
     '-fdata-sections',
     '-mcpu=cortex-m0plus',
     '-mthumb',]
+linker_script = '@DIRNAME@' / 'rp2040.ld'
 
 [binaries]
 c = toolchain_prefix + 'gcc'
@@ -14,13 +17,14 @@ strip = toolchain_prefix + 'strip'
 objdump = toolchain_prefix + 'objdump'
 ld = toolchain_prefix + 'ld'
 
-[properties]
-linker_script = 'armv6-m/rp2040.ld'
-
 [built-in options]
 cpp_args = common_args + [
     '-fno-exceptions']
 c_args = common_args
+cpp_link_args = [
+    '-Wl,--script=' + linker_script,
+    '-nostartfiles',]
+
 
 [host_machine]
 system = 'baremetal'

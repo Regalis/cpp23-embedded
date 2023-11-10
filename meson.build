@@ -28,6 +28,16 @@ project(
   version: '0.1'
 )
 
+if not meson.version().version_compare('>=1.3')
+  error('This project requires meson>=1.3\n' +
+        'Please update your meson installation.\n' +
+        'You can use Python\'s venv module to make it easy and non-invasive:\n' +
+        '    $ python -m venv venv\n' + 
+        '    $ source venv/bin/activate\n' +
+        '    $ pip install meson==1.3.0rc2' +
+        '\n Happy hacking :-)')
+endif
+
 if not meson.is_cross_build()
   error('This project can only be built in a cross build environment.\n' +
         'Please use --cross-file option and pass the selected file' +
@@ -62,19 +72,6 @@ add_project_arguments(
     '-Werror=return-type',
   ]),
   language: ['cpp'],
-)
-
-add_project_link_arguments(
-  #  '-nolibc',
-  '-nostartfiles',
-  '-mthumb',
-  #'-nostdlib',
-  #'-ffunction-sections',
-  '-Wl,--script=' + (
-    meson.current_source_dir() / 'cross' /
-      meson.get_cross_property('linker_script')
-    ),
-  language: ['cpp', 'c'],
 )
 
 include_dirs = include_directories([
