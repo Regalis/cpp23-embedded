@@ -30,11 +30,56 @@
 
 namespace hwio {
 
+template<typename T, typename... U>
+concept is_one_of_valid_regions = (std::same_as<T, U> || ...);
+
+template<typename T, typename... U>
+concept valid_region = is_one_of_valid_regions<T, U...>;
+
+// clang-format off
+template<typename T>
+concept hwio_region = requires {
+    typename T::value_t;
+    {T::first_bit};
+    {T::length};
+    {T::value};
+};
+// clang-format on
+
+template<std::semiregular ValueType, std::size_t FirstBit, std::size_t Length>
+class region
+{
+  public:
+    using value_t = std::decay_t<ValueType>;
+    constexpr static std::size_t first_bit = FirstBit;
+    constexpr static std::size_t length = Length;
+    ValueType value;
+};
+
+template<typename T>
+concept region_numeric = hwio_region<T> && std::integral<typename T::value_t>;
+
+template<typename T>
+concept region_strong = hwio_region<T> && requires {
+    requires std::is_scoped_enum_v<typename T::value_t>;
+};
+
+constexpr auto region_value(const region_numeric auto& region)
+{
+    return region.value;
+}
+
+constexpr auto region_value(const region_strong auto& region)
+{
+    return std::to_underlying(region.value);
+}
+
 template<typename RegPtrType,
          typename RegValueType,
          RegPtrType BaseAddr,
          RegPtrType Offset = 0,
-         typename BitsType = unsigned int>
+         typename BitsType = unsigned int,
+         hwio_region... Region>
 class reg
 {
   public:
@@ -61,15 +106,41 @@ class reg
     {
         return *ptr();
     }
+
+    template<typename R>
+        requires is_one_of_valid_regions<R, Region...>
+    constexpr static auto region_mask(const R& region)
+    {
+        auto reg_bits = sizeof(reg_value_t) * 8;
+        reg_value_t all_bits = ~0;
+        return (all_bits >> (reg_bits - region.length)) << region.first_bit;
+    }
+
+    template<typename R>
+        requires is_one_of_valid_regions<R, Region...>
+    constexpr static auto region_value_at_its_position(const R& region)
+    {
+        return ((region_value(region) << R::first_bit) & region_mask(region));
+    }
+
+    constexpr static auto all_regions_mask()
+    {
+        return bitwise_or((region_mask(Region{}), ...));
+    }
 };
 
 template<typename RegPtrType,
          typename RegValueType,
          RegPtrType BaseAddr,
          RegPtrType Offset = 0,
-         typename BitsType = unsigned int>
-using volatile_reg =
-  reg<volatile RegPtrType, RegValueType, BaseAddr, Offset, BitsType>;
+         typename BitsType = unsigned int,
+         hwio_region... Region>
+using volatile_reg = reg<volatile RegPtrType,
+                         RegValueType,
+                         BaseAddr,
+                         Offset,
+                         BitsType,
+                         Region...>;
 
 // clang-format off
 template<typename T>
@@ -134,6 +205,20 @@ class wo : public T
     {
         set_value(value);
         return *this;
+    }
+
+    constexpr static T::reg_value_t regions_to_register_value(
+      const auto... region)
+    {
+        return (T::region_value_at_its_position(region) | ...);
+    }
+
+    // This operation performs a single read and a single write from/to the
+    // register
+    constexpr static void update_regions(const auto... region)
+    {
+        T::ref() = (T::cref() & ~bitwise_or((T::region_mask(region), ...))) |
+                   regions_to_register_value(region...);
     }
 };
 
