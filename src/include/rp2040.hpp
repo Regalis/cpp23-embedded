@@ -102,6 +102,8 @@ constexpr static platform::reg_ptr_t pll_sys_base = 0x40028000;
 constexpr static platform::reg_ptr_t pll_usb_base = 0x4002c000;
 constexpr static platform::reg_ptr_t xosc_base = 0x40024000;
 constexpr static platform::reg_ptr_t clocks_base = 0x40008000;
+constexpr static platform::reg_ptr_t watchdog_base = 0x40058000;
+constexpr static platform::reg_ptr_t timer_base = 0x40054000;
 
 // TODO: move to a dedicated header file
 constexpr static platform::reg_ptr_t m0plus_vtor_offset = 0xed08;
@@ -367,6 +369,8 @@ using prim_region_postdiv1 = hwio::region<reg_val_t, 16, 3>;
 
 struct sys
 {
+    static constexpr registers::reset_bits reset_bit =
+      registers::reset_bits::pll_sys;
 
     using cs =
       rw_reg<registers::addrs::pll_sys_base, 0x0, cs_bits, cs_region_refdiv>;
@@ -387,6 +391,9 @@ struct sys
 
 struct usb
 {
+
+    static constexpr registers::reset_bits reset_bit =
+      registers::reset_bits::pll_usb;
 
     using cs =
       rw_reg<registers::addrs::pll_usb_base, 0x0, cs_bits, cs_region_refdiv>;
@@ -409,33 +416,35 @@ struct usb
 
 namespace xosc {
 
+constexpr uint32_t frequency_khz = 12000;
+
 enum class ctrl_region_freq_range_values : reg_val_t
 {
-    RANGE_1_15_MHz = 0xaa0,
+    range_1_15_mhz = 0xaa0,
 };
 
 enum class ctrl_region_enable_values : reg_val_t
 {
-    DISABLE = 0xd1e,
-    ENABLE = 0xfab,
+    disable = 0xd1e,
+    enable = 0xfab,
 };
 
 using ctrl_region_freq_range =
   hwio::region<ctrl_region_freq_range_values, 0, 12>;
-using ctrl_region_enbale = hwio::region<ctrl_region_enable_values, 12, 12>;
+using ctrl_region_enable = hwio::region<ctrl_region_enable_values, 12, 12>;
 
 enum class status_bits : reg_val_t
 {
-    FREQ_RANGE0 = 0,
-    FREQ_RANGE1,
-    ENABLED = 12,
-    BADWRITE = 24,
-    STABLE = 31,
+    freq_range0 = 0,
+    freq_range1,
+    enabled = 12,
+    badwrite = 24,
+    stable = 31,
 };
 
 enum class status_region_freq_range_values : reg_val_t
 {
-    RANGE_1_15_MHz = 0x0,
+    range_1_15_mhz = 0x0,
 };
 
 using status_region_freq_range =
@@ -443,15 +452,15 @@ using status_region_freq_range =
 
 enum class dormant_region_values : reg_val_t
 {
-    DORMANT = 0x636f6d61,
-    WAKE = 0x77616b65,
+    dormant = 0x636f6d61,
+    wake = 0x77616b65,
 };
 
 using dormant_region = hwio::region<dormant_region_values, 0, 32>;
 
 enum class startup_bits : reg_val_t
 {
-    X4 = 20,
+    x4 = 20,
 };
 
 using startup_region_delay = hwio::region<reg_val_t, 0, 14>;
@@ -461,7 +470,7 @@ using count_region = hwio::region<reg_val_t, 0, 8>;
 using ctrl = rw_reg<registers::addrs::xosc_base,
                     0x00,
                     reg_val_t,
-                    ctrl_region_enbale,
+                    ctrl_region_enable,
                     ctrl_region_freq_range>;
 using status = rw_reg<registers::addrs::xosc_base,
                       0x04,
@@ -475,6 +484,22 @@ using startup = rw_reg<registers::addrs::xosc_base,
                        startup_region_delay>;
 using count =
   rw_reg<registers::addrs::xosc_base, 0x1c, reg_val_t, count_region>;
+
+// experimental namespace
+// convenient regions, by value
+namespace regions {
+namespace ctrl::freq_range {
+constexpr ctrl_region_freq_range range_1_15_mhz
+  [[maybe_unused]]{ctrl_region_freq_range_values::range_1_15_mhz};
+}
+
+namespace ctrl::enable {
+constexpr ctrl_region_enable enable
+  [[maybe_unused]]{ctrl_region_enable_values::enable};
+constexpr ctrl_region_enable disable
+  [[maybe_unused]]{ctrl_region_enable_values::disable};
+}
+}
 
 }
 
@@ -619,6 +644,8 @@ enum class clk_sys_div_bits : reg_val_t
     int23,
 };
 
+using clk_peri_div_bits = clk_sys_div_bits;
+
 enum class clk_peri_ctrl_bits : reg_val_t
 {
     auxsrc0 = 5,
@@ -673,6 +700,7 @@ enum class clk_usb_div_bits : reg_val_t
     int1,
 };
 
+using clk_rtc_div_bits = clk_usb_div_bits;
 using clk_usb_div_region_int = hwio::region<reg_val_t, 8, 2>;
 
 enum class clk_adc_ctrl_bits : reg_val_t
@@ -686,6 +714,7 @@ enum class clk_adc_ctrl_bits : reg_val_t
     phase1,
     nudge = 20,
 };
+using clk_rtc_ctrl_bits = clk_adc_ctrl_bits;
 
 enum class clk_adc_ctrl_region_auxsrc_values
 {
@@ -697,8 +726,11 @@ enum class clk_adc_ctrl_region_auxsrc_values
     clksrc_gpin1,
 };
 
+using clk_rtc_ctrl_region_auxsrc_values = clk_adc_ctrl_region_auxsrc_values;
+
 using clk_adc_ctrl_region_auxsrc =
   hwio::region<clk_adc_ctrl_region_auxsrc_values, 5, 2>;
+using clk_rtc_ctrl_region_auxsrc = clk_adc_ctrl_region_auxsrc;
 
 enum class clk_adc_div_bits : reg_val_t
 {
@@ -707,6 +739,7 @@ enum class clk_adc_div_bits : reg_val_t
 };
 
 using clk_adc_div_region_int = hwio::region<reg_val_t, 8, 2>;
+using clk_rtc_div_region_int = clk_adc_div_region_int;
 
 enum class clk_sys_resus_ctrl_bits : reg_val_t
 {
@@ -838,6 +871,10 @@ namespace detail {
 template<uint8_t index>
 struct clk_gpout
 {
+    using ctrl_bits = clk_gpout_ctrl_bits;
+    using auxsrc = clk_gpout_ctrl_region_auxsrc_values;
+    constexpr static bool has_glitchless_mux = false;
+
     using ctrl = rw_reg<registers::addrs::clocks_base,
                         (index * 12UL) + 0x00UL,
                         clk_gpout_ctrl_bits,
@@ -862,6 +899,14 @@ using clk_gpout3 = detail::clk_gpout<3>;
 
 struct clk_ref
 {
+    using ctrl_bits = clk_ref_ctrl_bits;
+    using div_bits = clk_ref_div_bits;
+    using region_auxsrc = clk_ref_ctrl_region_auxsrc;
+    using auxsrc = clk_ref_ctrl_region_auxsrc_values;
+    using region_src = clk_ref_ctrl_region_src;
+    using src = clk_ref_ctrl_region_src_values;
+    constexpr static bool has_glitchless_mux = true;
+
     using ctrl = rw_reg<registers::addrs::clocks_base,
                         0x30,
                         clk_ref_ctrl_bits,
@@ -876,6 +921,14 @@ struct clk_ref
 
 struct clk_sys
 {
+    using ctrl_bits = clk_sys_ctrl_bits;
+    using div_bits = clk_sys_div_bits;
+    using region_auxsrc = clk_sys_ctrl_region_auxsrc;
+    using auxsrc = clk_sys_ctrl_region_auxsrc_values;
+    using region_src = clk_sys_ctrl_region_src;
+    using src = clk_sys_ctrl_region_src_values;
+    constexpr static bool has_glitchless_mux = true;
+
     using ctrl = rw_reg<registers::addrs::clocks_base,
                         0x3c,
                         clk_sys_ctrl_bits,
@@ -891,6 +944,12 @@ struct clk_sys
 
 struct clk_peri
 {
+    using ctrl_bits = clk_peri_ctrl_bits;
+    using div_bits = clk_peri_div_bits;
+    using region_auxsrc = clk_peri_ctrl_region_auxsrc;
+    using auxsrc = clk_peri_ctrl_region_auxsrc_values;
+    constexpr static bool has_glitchless_mux = false;
+
     using ctrl = rw_reg<registers::addrs::clocks_base,
                         0x48,
                         clk_peri_ctrl_bits,
@@ -898,7 +957,7 @@ struct clk_peri
     // TODO: The datasheet does not use this register...
     using div = rw_reg<registers::addrs::clocks_base,
                        0x4c,
-                       clk_sys_div_bits,
+                       clk_peri_div_bits,
                        clk_div_region_int,
                        clk_div_region_frac>;
     using selected = ro_reg<registers::addrs::clocks_base, 0x50, reg_val_t>;
@@ -906,6 +965,12 @@ struct clk_peri
 
 struct clk_usb
 {
+    using ctrl_bits = clk_usb_ctrl_bits;
+    using div_bits = clk_usb_div_bits;
+    using region_auxsrc = clk_usb_ctrl_region_auxsrc;
+    using auxsrc = clk_usb_ctrl_region_auxsrc_values;
+    constexpr static bool has_glitchless_mux = false;
+
     using ctrl = rw_reg<registers::addrs::clocks_base,
                         0x54,
                         clk_usb_ctrl_bits,
@@ -919,6 +984,12 @@ struct clk_usb
 
 struct clk_adc
 {
+    using ctrl_bits = clk_adc_ctrl_bits;
+    using div_bits = clk_adc_div_bits;
+    using region_auxsrc = clk_adc_ctrl_region_auxsrc;
+    using auxsrc = clk_adc_ctrl_region_auxsrc_values;
+    constexpr static bool has_glitchless_mux = false;
+
     using ctrl = rw_reg<registers::addrs::clocks_base,
                         0x60,
                         clk_adc_ctrl_bits,
@@ -932,19 +1003,27 @@ struct clk_adc
 
 struct clk_rtc
 {
+    using div_bits = clk_rtc_div_bits;
+    using ctrl_bits = clk_rtc_ctrl_bits;
+    using region_auxsrc = clk_rtc_ctrl_region_auxsrc;
+    using auxsrc = clk_rtc_ctrl_region_auxsrc_values;
+    constexpr static bool has_glitchless_mux = false;
+
     using ctrl = rw_reg<registers::addrs::clocks_base,
                         0x6c,
-                        clk_adc_ctrl_bits,
-                        clk_adc_ctrl_region_auxsrc>;
+                        clk_rtc_ctrl_bits,
+                        clk_rtc_ctrl_region_auxsrc>;
     using div = rw_reg<registers::addrs::clocks_base,
                        0x70,
-                       clk_adc_div_bits,
-                       clk_adc_div_region_int>;
+                       clk_rtc_div_bits,
+                       clk_rtc_div_region_int>;
     using selected = ro_reg<registers::addrs::clocks_base, 0x74, reg_val_t>;
 };
 
 struct clk_sys_resus
 {
+    constexpr static bool has_glitchless_mux = false;
+
     using ctrl =
       rw_reg<registers::addrs::clocks_base, 0x78, clk_sys_resus_ctrl_bits>;
     using status =
@@ -963,6 +1042,49 @@ using inte = rw_reg<registers::addrs::clocks_base, 0xbc, inte_bits>;
 using intf = rw_reg<registers::addrs::clocks_base, 0xc0, intf_bits>;
 using ints = rw_reg<registers::addrs::clocks_base, 0xc4, ints_bits>;
 
+}
+
+namespace watchdog {
+enum class tick_bits : reg_val_t
+{
+    cycles0 = 0,
+    cycles1,
+    cycles2,
+    cycles3,
+    cycles4,
+    cycles5,
+    cycles6,
+    cycles7,
+    cycles8,
+    enable,
+    running,
+    count0,
+    count1,
+    count2,
+    count3,
+    count4,
+    count5,
+    count6,
+    count7,
+    count8,
+};
+
+using tick_region_cycles = hwio::region<uint32_t, 0, 9>;
+using tick_region_count = hwio::region<uint32_t, 11, 9>;
+
+using tick = rw_reg<registers::addrs::watchdog_base,
+                    0x2c,
+                    tick_bits,
+                    tick_region_cycles,
+                    tick_region_count>;
+
+}
+
+namespace timer {
+using timehr = ro_reg<registers::addrs::timer_base, 0x08>;
+using timelr = ro_reg<registers::addrs::timer_base, 0x0c>;
+using timerawh = ro_reg<registers::addrs::timer_base, 0x24>;
+using timerawl = ro_reg<registers::addrs::timer_base, 0x28>;
 }
 
 }
