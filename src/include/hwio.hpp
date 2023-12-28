@@ -109,10 +109,10 @@ class reg
 
     template<typename R>
         requires is_one_of_valid_regions<R, Region...>
-    constexpr static auto region_mask(const R& region)
+    constexpr static reg_value_t region_mask(const R& region)
     {
         auto reg_bits = sizeof(reg_value_t) * 8;
-        reg_value_t all_bits = ~0;
+        reg_value_t all_bits = ~0UL;
         return (all_bits >> (reg_bits - region.length)) << region.first_bit;
     }
 
@@ -120,7 +120,9 @@ class reg
         requires is_one_of_valid_regions<R, Region...>
     constexpr static auto region_value_at_its_position(const R& region)
     {
-        return ((region_value(region) << R::first_bit) & region_mask(region));
+        return (
+          (static_cast<reg_value_t>(region_value(region)) << R::first_bit) &
+          region_mask(region));
     }
 
     constexpr static auto all_regions_mask()
@@ -219,6 +221,11 @@ class wo : public T
     {
         T::ref() = (T::cref() & ~bitwise_or((T::region_mask(region), ...))) |
                    regions_to_register_value(region...);
+    }
+
+    constexpr static void clear_regions(const auto... region)
+    {
+        T::ref() = (T::cref() & ~bitwise_or((T::region_mask(region), ...)));
     }
 };
 
