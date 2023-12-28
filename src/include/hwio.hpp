@@ -127,7 +127,7 @@ class reg
 
     constexpr static auto all_regions_mask()
     {
-        return bitwise_or((region_mask(Region{}), ...));
+        return bitwise_or(region_mask(Region{})...);
     }
 };
 
@@ -219,13 +219,13 @@ class wo : public T
     // register
     constexpr static void update_regions(const auto... region)
     {
-        T::ref() = (T::cref() & ~bitwise_or((T::region_mask(region), ...))) |
+        T::ref() = (T::cref() & ~bitwise_or(T::region_mask(region)...)) |
                    regions_to_register_value(region...);
     }
 
     constexpr static void clear_regions(const auto... region)
     {
-        T::ref() = (T::cref() & ~bitwise_or((T::region_mask(region), ...)));
+        T::ref() = (T::cref() & ~bitwise_or(T::region_mask(region)...));
     }
 };
 
