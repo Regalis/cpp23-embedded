@@ -19,10 +19,13 @@
 
 headers += files([
   'bitops.hpp',
+  'clocks.hpp',
   'delay.hpp',
   'gpio.hpp',
   'hwio.hpp',
   'pads.hpp',
   'reset.hpp',
   'rp2040.hpp',
+  'timer.hpp',
+  'xosc.hpp',
 ])

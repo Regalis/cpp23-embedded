@@ -21,32 +21,36 @@
 
 #include <cstdint>
 
+#include "clocks.hpp"
 #include "delay.hpp"
 #include "gpio.hpp"
 #include "reset.hpp"
+#include "rp2040.hpp"
+#include "timer.hpp"
 
 int main()
 {
-    using namespace platform;
+    clocks::init();
+    clocks::watchdog_start(platform::xosc::frequency_khz);
     reset::release_subsystem_wait(reset::subsystems::io_bank0);
-    gpio::pin<pins::gpio25> led0;
+    gpio::pin<platform::pins::gpio25> led0;
     led0.function_select(gpio::functions::sio);
     led0.set_as_output();
 
     while (1) {
-        for (int i = 0; i < 100; ++i) {
+        for (int i = 0; i < 10; ++i) {
             led0.toggle();
-            delay(0x100000 / 64);
+            timer::delay_ms(500);
         }
 
-        for (int i = 0; i < 100; ++i) {
+        for (int i = 0; i < 20; ++i) {
             led0.toggle();
-            delay(0x100000 / 32);
+            timer::delay_ms(250);
         }
 
-        for (int i = 0; i < 100; ++i) {
+        for (int i = 0; i < 50; ++i) {
             led0.toggle();
-            delay(0x100000 / 16);
+            timer::delay_ms(100);
         }
     }
 }

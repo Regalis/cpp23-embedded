@@ -21,9 +21,9 @@
 
 #include <cstdint>
 
-static inline void delay(uint32_t num)
+static inline void delay(uint64_t num)
 {
-    volatile uint32_t counter = num;
+    volatile uint64_t counter = num;
     while (counter) {
         counter = counter - 1;
     }
