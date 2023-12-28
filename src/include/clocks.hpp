@@ -199,8 +199,7 @@ constexpr void pll_init(uint32_t refdiv,
     P::cs::update_regions(pll::cs_region_refdiv{refdiv});
     P::fbdiv_int::update_regions(pll::fbdiv_int_region_value{fbdiv});
 
-    P::pwr::reset_bits(pll::pwr_bits::pd);
-    P::pwr::reset_bits(pll::pwr_bits::vcopd);
+    P::pwr::reset_bits(pll::pwr_bits::pd, pll::pwr_bits::vcopd);
 
     while (!P::cs::get_bit(pll::cs_bits::lock)) {
         // wait for PLL to lock
