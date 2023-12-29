@@ -107,6 +107,7 @@ constexpr static platform::reg_ptr_t watchdog_base = 0x40058000;
 constexpr static platform::reg_ptr_t timer_base = 0x40054000;
 constexpr static platform::reg_ptr_t uart0_base = 0x40034000;
 constexpr static platform::reg_ptr_t uart1_base = 0x40038000;
+constexpr static platform::reg_ptr_t pwm_base = 0x40050000;
 
 // TODO: move to a dedicated header file
 constexpr static platform::reg_ptr_t m0plus_vtor_offset = 0xed08;
@@ -1386,6 +1387,114 @@ using uart0 = detail::uart_base<registers::addrs::uart0_base,
                                 registers::reset_bits::uart0>;
 using uart1 = detail::uart_base<registers::addrs::uart1_base,
                                 registers::reset_bits::uart1>;
+
+}
+
+namespace pwm {
+
+enum class csr_bits : reg_val_t
+{
+    en = 0,
+    ph_correct,
+    a_inv,
+    b_inv,
+    divmode0,
+    divmode1,
+    ph_ret,
+    ph_adv,
+};
+
+enum class csr_region_divmode_values : reg_val_t
+{
+    free_running_directed_by_fractional_divider = 0x0,
+    fractional_divider_gated_by_the_pwm_b_pin = 0x1,
+    rising_edge_of_the_pwm_b_pin = 0x2,
+    falling_edge_of_the_pwm_b_pin = 0x3,
+};
+
+using csr_region_divmode = hwio::region<csr_region_divmode_values, 4, 2>;
+
+enum class div_bits : reg_val_t
+{
+    frac0 = 0,
+    frac1,
+    frac2,
+    frac3,
+    int0,
+    int1,
+    int2,
+    int3,
+    int4,
+    int5,
+    int6,
+    int7,
+};
+
+using div_region_frac = hwio::region<reg_val_t, 0, 4>;
+using div_region_int = hwio::region<reg_val_t, 4, 8>;
+
+using ctr_region_counter = hwio::region<uint16_t, 0, 16>;
+
+using cc_region_a = hwio::region<uint16_t, 0, 16>;
+using cc_region_b = hwio::region<uint16_t, 16, 16>;
+
+using top_region_wrap = hwio::region<uint16_t, 0, 16>;
+
+enum class channel_bits : reg_val_t
+{
+    ch0 = 0,
+    ch1,
+    ch2,
+    ch3,
+    ch4,
+    ch5,
+    ch6,
+    ch7,
+};
+
+using en_bits = channel_bits;
+using intr_bits = channel_bits;
+using inte_bits = channel_bits;
+using intf_bits = channel_bits;
+using ints_bits = channel_bits;
+
+namespace detail {
+
+static constexpr reg_ptr_t channels_addr_diff = 0x14;
+
+template<reg_val_t channel_no>
+struct channel
+{
+    static constexpr reg_ptr_t channel_base_addr =
+      registers::addrs::pwm_base + (channels_addr_diff * channel_no);
+
+    using csr = rw_reg<channel_base_addr, 0x00, csr_bits, csr_region_divmode>;
+    using div = rw_reg<channel_base_addr,
+                       0x04,
+                       div_bits,
+                       div_region_int,
+                       div_region_frac>;
+    using ctr = rw_reg<channel_base_addr, 0x08, reg_val_t, ctr_region_counter>;
+    using cc =
+      rw_reg<channel_base_addr, 0x0c, reg_val_t, cc_region_a, cc_region_b>;
+    using top = rw_reg<channel_base_addr, 0x10, reg_val_t, top_region_wrap>;
+};
+
+using ch0 = detail::channel<0>;
+using ch1 = detail::channel<1>;
+using ch2 = detail::channel<2>;
+using ch3 = detail::channel<3>;
+using ch4 = detail::channel<4>;
+using ch5 = detail::channel<5>;
+using ch6 = detail::channel<6>;
+using ch7 = detail::channel<7>;
+using en = rw_reg<registers::addrs::pwm_base, 0xa0, en_bits>;
+using intr = rw_reg<registers::addrs::pwm_base, 0xa4, en_bits>;
+using inte = rw_reg<registers::addrs::pwm_base, 0xa8, en_bits>;
+using intf = rw_reg<registers::addrs::pwm_base, 0xac, en_bits>;
+using ints = rw_reg<registers::addrs::pwm_base, 0xb0, en_bits>;
+
+}
 
 }
 
