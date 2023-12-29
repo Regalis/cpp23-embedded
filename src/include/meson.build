@@ -27,5 +27,6 @@ headers += files([
   'reset.hpp',
   'rp2040.hpp',
   'timer.hpp',
+  'uart.hpp',
   'xosc.hpp',
 ])

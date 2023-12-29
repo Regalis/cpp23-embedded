@@ -27,6 +27,16 @@
 #include "reset.hpp"
 #include "rp2040.hpp"
 #include "timer.hpp"
+#include "uart.hpp"
+
+void init_io()
+{
+    gpio::pin<platform::pins::gpio0> tx;
+    gpio::pin<platform::pins::gpio1> rx;
+    rx.function_select(gpio::functions::uart);
+    tx.function_select(gpio::functions::uart);
+    uart::uart0::init(9600);
+}
 
 int main()
 {
@@ -36,6 +46,9 @@ int main()
     gpio::pin<platform::pins::gpio25> led0;
     led0.function_select(gpio::functions::sio);
     led0.set_as_output();
+
+    init_io();
+    uart::uart0::puts("Hello world from Pico ^^\r\n");
 
     while (1) {
         for (int i = 0; i < 10; ++i) {
