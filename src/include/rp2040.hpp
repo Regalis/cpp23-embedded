@@ -23,6 +23,7 @@
 #define RP2040_HPP
 
 #include <cstdint>
+#include <utility>
 
 #include "bitops.hpp"
 #include "hwio.hpp"
@@ -104,6 +105,8 @@ constexpr static platform::reg_ptr_t xosc_base = 0x40024000;
 constexpr static platform::reg_ptr_t clocks_base = 0x40008000;
 constexpr static platform::reg_ptr_t watchdog_base = 0x40058000;
 constexpr static platform::reg_ptr_t timer_base = 0x40054000;
+constexpr static platform::reg_ptr_t uart0_base = 0x40034000;
+constexpr static platform::reg_ptr_t uart1_base = 0x40038000;
 
 // TODO: move to a dedicated header file
 constexpr static platform::reg_ptr_t m0plus_vtor_offset = 0xed08;
@@ -1085,6 +1088,305 @@ using timehr = ro_reg<registers::addrs::timer_base, 0x08>;
 using timelr = ro_reg<registers::addrs::timer_base, 0x0c>;
 using timerawh = ro_reg<registers::addrs::timer_base, 0x24>;
 using timerawl = ro_reg<registers::addrs::timer_base, 0x28>;
+}
+
+namespace uart {
+
+enum class uartdr_bits : reg_val_t
+{
+    data0 = 0,
+    data1,
+    data2,
+    data3,
+    data4,
+    data5,
+    data6,
+    data7,
+    fe = 8,
+    framing_error = 8,
+    pe = 9,
+    parity_error = 9,
+    be = 10,
+    break_error = 10,
+    oe = 11,
+    overrun_error = 11,
+};
+
+using uartdr_region_data = hwio::region<char, 0, 8>;
+
+enum class uartrsr_bits : reg_val_t
+{
+    fe = 0,
+    framing_error = 0,
+    pe = 1,
+    parity_error = 1,
+    be = 2,
+    break_error = 2,
+    oe = 3,
+    overrun_error = 3,
+};
+
+enum class uartfr_bits : reg_val_t
+{
+    cts = 0,
+    dsr,
+    dcd,
+    busy,
+    rxfe,
+    txff,
+    rxff,
+    txfe,
+    ri
+};
+
+enum class uartilpr_bits : reg_val_t
+{
+    ilpdvsr0 = 0,
+    ilpdvsr1,
+    ilpdvsr2,
+    ilpdvsr3,
+    ilpdvsr4,
+    ilpdvsr5,
+    ilpdvsr6,
+    ilpdvsr7,
+};
+
+using uartilpr_region_ilpdvsr = hwio::region<uint8_t, 0, 8>;
+
+enum class uartibrd_bits : reg_val_t
+{
+    baud_divint0 = 0,
+    baud_divint1,
+    baud_divint2,
+    baud_divint3,
+    baud_divint4,
+    baud_divint5,
+    baud_divint6,
+    baud_divint7,
+    baud_divint8,
+    baud_divint9,
+    baud_divint10,
+    baud_divint11,
+    baud_divint12,
+    baud_divint13,
+    baud_divint14,
+    baud_divint15,
+};
+
+using uartibrd_region_baud_divint = hwio::region<uint16_t, 0, 16>;
+
+enum class uartfbrd_bits : reg_val_t
+{
+    baud_divfrac0 = 0,
+    baud_divfrac1,
+    baud_divfrac2,
+    baud_divfrac3,
+    baud_divfrac4,
+    baud_divfrac5,
+};
+
+using uartfbrd_region_baud_divfrac = hwio::region<uint8_t, 0, 6>;
+
+enum class uartlcr_h_bits : reg_val_t
+{
+    brk = 0,
+    pen,
+    eps,
+    stp2,
+    fen,
+    wlen0,
+    wlen1,
+    sps,
+};
+
+enum class uartlcr_h_region_wlen_values : reg_val_t
+{
+    word_5_bits = 0,
+    word_6_bits,
+    word_7_bits,
+    word_8_bits,
+};
+
+enum class uartlcr_h_region_stop_bits_values : reg_val_t
+{
+    one = 0,
+    two = 1
+};
+
+enum class uartlcr_h_region_parity_values : reg_val_t
+{
+    odd = 0,
+    even = 1,
+};
+
+using uartlcr_h_region_wlen = hwio::region<uartlcr_h_region_wlen_values, 5, 2>;
+using uartlcr_h_region_stop_bits =
+  hwio::region<uartlcr_h_region_stop_bits_values,
+               std::to_underlying(uartlcr_h_bits::stp2),
+               1>;
+using uartlcr_h_region_parity =
+  hwio::region<uartlcr_h_region_parity_values,
+               std::to_underlying(uartlcr_h_bits::eps),
+               1>;
+
+enum class uartcr_bits : reg_val_t
+{
+    uarten = 0,
+    siren,
+    sirlp,
+    lbe = 7,
+    txe,
+    rxe,
+    dtr,
+    rts,
+    out1,
+    out2,
+    rtsen,
+    ctsen,
+};
+
+enum class uartifls_bits : reg_val_t
+{
+    txiflsel0 = 0,
+    txiflsel1,
+    txiflsel2,
+    rxiflsel0,
+    rxiflsel1,
+    rxiflsel2,
+};
+
+enum class uartifls_region_txiflsel_values : reg_val_t
+{
+    fifo_le_1_8_full = 0,
+    fifo_le_1_4_full,
+    fifo_le_1_2_full,
+    fifo_le_3_4_full,
+    fifo_le_7_8_full,
+};
+
+enum class uartifls_region_rxiflsel_values : reg_val_t
+{
+    fifo_le_1_8_full = 0,
+    fifo_le_1_4_full,
+    fifo_le_1_2_full,
+    fifo_le_3_4_full,
+    fifo_le_7_8_full,
+};
+
+using uartifls_region_rxiflsel =
+  hwio::region<uartifls_region_rxiflsel_values, 3, 3>;
+using uartifls_region_txiflsel =
+  hwio::region<uartifls_region_txiflsel_values, 0, 3>;
+
+enum class uartimsc_bits : reg_val_t
+{
+    rimim = 0,
+    ctsmim,
+    dcdmim,
+    dsrmim,
+    rxim,
+    txim,
+    rtim,
+    feim,
+    peim,
+    beim,
+    oeim,
+};
+
+enum class uartris_bits : reg_val_t
+{
+    rirmis = 0,
+    ctsrmis,
+    dcdrmis,
+    dsrrmis,
+    rxris,
+    txris,
+    rtris,
+    feris,
+    peris,
+    beris,
+    oeris,
+};
+
+enum class uartmis_bits : reg_val_t
+{
+    rimmis = 0,
+    ctsmmis,
+    dcdmmis,
+    dsrmmis,
+    rxmis,
+    txmis,
+    rtmis,
+    femis,
+    pemis,
+    bemis,
+    oemis,
+};
+
+enum class uarticr_bits : reg_val_t
+{
+    rimic = 0,
+    ctsmic,
+    dcdmic,
+    dsrmic,
+    rxic,
+    txic,
+    rtic,
+    feic,
+    peic,
+    beic,
+    oeic,
+};
+
+enum class uartdmacr_bits : reg_val_t
+{
+    rxdmae = 0,
+    txdmae,
+    dmaonerr,
+};
+
+namespace detail {
+
+template<reg_ptr_t base_addr, registers::reset_bits subsystem_reset_pin>
+struct uart_base
+{
+    constexpr static registers::reset_bits reset_bit = subsystem_reset_pin;
+
+    using uartdr = rw_reg<base_addr, 0x000, uartdr_bits, uartdr_region_data>;
+    using uartrsr = rw_reg<base_addr, 0x004, uartrsr_bits>;
+    using uartfr = rw_reg<base_addr, 0x018, uartfr_bits>;
+    using uartilpr =
+      rw_reg<base_addr, 0x020, uartilpr_bits, uartilpr_region_ilpdvsr>;
+    using uartibrd =
+      rw_reg<base_addr, 0x024, uartibrd_bits, uartibrd_region_baud_divint>;
+    using uartfbrd =
+      rw_reg<base_addr, 0x028, uartfbrd_bits, uartfbrd_region_baud_divfrac>;
+    using uartlcr_h = rw_reg<base_addr,
+                             0x02c,
+                             uartlcr_h_bits,
+                             uartlcr_h_region_wlen,
+                             uartlcr_h_region_parity,
+                             uartlcr_h_region_stop_bits>;
+    using uartcr = rw_reg<base_addr, 0x030, uartcr_bits>;
+    using uartifls = rw_reg<base_addr,
+                            0x034,
+                            uartifls_bits,
+                            uartifls_region_rxiflsel,
+                            uartifls_region_txiflsel>;
+    using uartimsc = rw_reg<base_addr, 0x038, uartimsc_bits>;
+    using uartris = rw_reg<base_addr, 0x03c, uartris_bits>;
+    using uartmis = rw_reg<base_addr, 0x040, uartmis_bits>;
+    using uarticr = rw_reg<base_addr, 0x044, uarticr_bits>;
+    using uartdmacr = rw_reg<base_addr, 0x048, uartdmacr_bits>;
+};
+
+}
+
+using uart0 = detail::uart_base<registers::addrs::uart0_base,
+                                registers::reset_bits::uart0>;
+using uart1 = detail::uart_base<registers::addrs::uart1_base,
+                                registers::reset_bits::uart1>;
+
 }
 
 }
