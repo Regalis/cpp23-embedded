@@ -74,6 +74,13 @@ add_project_arguments(
   language: ['cpp'],
 )
 
+add_project_arguments(
+    # TODO: make this a config option
+   '-includeinclude/boards/raspberry_pico.hpp',
+    language: ['cpp'],
+    native: false,
+)
+
 include_dirs = include_directories([
   'src/include',
 ])

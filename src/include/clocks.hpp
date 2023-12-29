@@ -214,6 +214,7 @@ constexpr void pll_init(uint32_t refdiv,
 void init()
 {
     using namespace platform::clocks;
+    using namespace board;
 
     xosc::init();
 
@@ -226,18 +227,6 @@ void init()
     while (clk_ref::selected::value() != 0x01) {
         // wait
     }
-
-    // TODO: move to a separate header file (with board descriptors)
-    constexpr uint32_t common_refdiv = 1UL;
-    constexpr uint32_t pll_sys_vco_freq_khz = 1500'000UL;
-    constexpr uint32_t pll_usb_vco_freq_khz = 1200'000UL;
-    constexpr uint32_t pll_sys_postdiv1 = 6UL;
-    constexpr uint32_t pll_sys_postdiv2 = 2UL;
-    constexpr uint32_t pll_usb_postdiv1 = 5UL;
-    constexpr uint32_t pll_usb_postdiv2 = 5UL;
-    constexpr uint32_t sys_clk_hz = 125'000'000UL;
-    constexpr uint32_t usb_clk_hz = 48'000'000UL;
-    constexpr uint32_t rtc_clock_hz = usb_clk_hz / 1024;
 
     pll_init<platform::pll::sys>(common_refdiv,
                                  pll_sys_vco_freq_khz * 1000,
@@ -266,7 +255,7 @@ void init()
     clock<clk_rtc>::configure(
       clk_rtc::auxsrc::clksrc_pll_usb, usb_clk_hz, rtc_clock_hz);
     clock<clk_peri>::configure(
-      clk_peri::auxsrc::clk_sys, sys_clk_hz, sys_clk_hz);
+      clk_peri::auxsrc::clk_sys, peri_clk_hz, peri_clk_hz);
 }
 
 /**
