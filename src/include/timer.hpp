@@ -23,20 +23,31 @@
 #define TIMER_HPP
 
 #include "rp2040.hpp"
+#include <chrono>
 
 namespace timer {
 
-constexpr void delay_us(uint32_t us)
+constexpr std::chrono::microseconds ticks_since_start()
 {
-    uint32_t target_value = platform::timer::timerawl::value() + us;
-    while (platform::timer::timerawl::value() < target_value) {
-        // wait
-    }
+    uint32_t hi = platform::timer::timerawh::value();
+    uint32_t lo;
+    do {
+        lo = platform::timer::timerawl::value();
+        uint32_t new_hi = platform::timer::timerawh::value();
+        if (hi == new_hi) {
+            break;
+        }
+        hi = new_hi;
+    } while (true);
+    return std::chrono::microseconds{(static_cast<uint64_t>(hi) << 32) | lo};
 }
 
-constexpr void delay_ms(uint16_t ms)
+constexpr void delay(std::chrono::microseconds us)
 {
-    delay_us(ms * 1000);
+    std::chrono::microseconds target_value = ticks_since_start() + us;
+    while (ticks_since_start() < target_value) {
+        // wait
+    }
 }
 
 }

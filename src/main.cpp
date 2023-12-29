@@ -20,6 +20,8 @@
  */
 
 #include <cstdint>
+#include <format>
+#include <string_view>
 
 #include "clocks.hpp"
 #include "delay.hpp"
@@ -40,6 +42,7 @@ void init_io()
 
 int main()
 {
+    using namespace std::chrono_literals;
     clocks::init();
     clocks::watchdog_start(platform::xosc::frequency_khz);
     reset::release_subsystem_wait(reset::subsystems::io_bank0);
@@ -53,17 +56,17 @@ int main()
     while (1) {
         for (int i = 0; i < 10; ++i) {
             led0.toggle();
-            timer::delay_ms(500);
+            timer::delay(500ms);
         }
 
-        for (int i = 0; i < 20; ++i) {
+        for (int i = 0; i < 10; ++i) {
             led0.toggle();
-            timer::delay_ms(250);
+            timer::delay(250ms);
         }
 
-        for (int i = 0; i < 50; ++i) {
+        for (int i = 0; i < 10; ++i) {
             led0.toggle();
-            timer::delay_ms(100);
+            timer::delay(100ms);
         }
     }
 }
