@@ -1406,7 +1406,7 @@ enum class csr_bits : reg_val_t
 
 enum class csr_region_divmode_values : reg_val_t
 {
-    free_running_directed_by_fractional_divider = 0x0,
+    free_running = 0x0,
     fractional_divider_gated_by_the_pwm_b_pin = 0x1,
     rising_edge_of_the_pwm_b_pin = 0x2,
     falling_edge_of_the_pwm_b_pin = 0x3,
@@ -1465,6 +1465,7 @@ static constexpr reg_ptr_t channels_addr_diff = 0x14;
 template<reg_val_t channel_no>
 struct channel
 {
+    static constexpr reg_val_t channel_number = channel_no;
     static constexpr reg_ptr_t channel_base_addr =
       registers::addrs::pwm_base + (channels_addr_diff * channel_no);
 
@@ -1480,6 +1481,8 @@ struct channel
     using top = rw_reg<channel_base_addr, 0x10, reg_val_t, top_region_wrap>;
 };
 
+}
+
 using ch0 = detail::channel<0>;
 using ch1 = detail::channel<1>;
 using ch2 = detail::channel<2>;
@@ -1493,8 +1496,6 @@ using intr = rw_reg<registers::addrs::pwm_base, 0xa4, en_bits>;
 using inte = rw_reg<registers::addrs::pwm_base, 0xa8, en_bits>;
 using intf = rw_reg<registers::addrs::pwm_base, 0xac, en_bits>;
 using ints = rw_reg<registers::addrs::pwm_base, 0xb0, en_bits>;
-
-}
 
 }
 

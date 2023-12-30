@@ -23,7 +23,6 @@
 #define GPIO_HPP
 
 #include "rp2040.hpp"
-#include <type_traits>
 
 namespace gpio {
 enum class functions : uint8_t
@@ -66,10 +65,12 @@ static constexpr void toggle(platform::pins pin_no)
     platform::registers::gpio_out_xor::set_bits(pin_no);
 }
 
-template<platform::pins pin_no>
+template<platform::pins Pin>
 class pin
 {
   public:
+    static constexpr platform::pins pin_no = Pin;
+
     static constexpr void function_select(gpio::functions func)
     {
         gpio::function_select<pin_no>(func);
