@@ -46,7 +46,8 @@ using word_length = platform::uart::uartlcr_h_region_wlen_values;
 
 constexpr baudrate_calculation baudrate_calculate(uint32_t requested_baudrate)
 {
-    uint32_t baud_rate_div = (8 * board::peri_clk_hz / requested_baudrate);
+    uint32_t baud_rate_div =
+      (8 * board::clocks::peri_clk_hz / requested_baudrate);
     uint32_t integer_divisor = baud_rate_div >> 7;
     uint32_t fractional_divisor;
 
@@ -60,8 +61,8 @@ constexpr baudrate_calculation baudrate_calculate(uint32_t requested_baudrate)
         fractional_divisor = ((baud_rate_div & 0x7f) + 1) / 2;
     }
 
-    uint32_t real_baudrate =
-      (4 * board::peri_clk_hz / (64 * integer_divisor + fractional_divisor));
+    uint32_t real_baudrate = (4 * board::clocks::peri_clk_hz /
+                              (64 * integer_divisor + fractional_divisor));
 
     return {baudrate_descriptor{.integer_divisor = integer_divisor,
                                 .fractional_divisor = fractional_divisor},

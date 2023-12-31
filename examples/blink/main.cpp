@@ -19,26 +19,28 @@
  *
  */
 
-#include <cstdint>
+#include "clocks.hpp"
+#include "gpio.hpp"
+#include "reset.hpp"
+#include "timer.hpp"
 
-namespace board {
+using namespace std::chrono_literals;
 
-namespace pll {
-constexpr uint32_t common_refdiv = 1UL;
-constexpr uint32_t pll_sys_vco_freq_khz = 1500'000UL;
-constexpr uint32_t pll_usb_vco_freq_khz = 1200'000UL;
-constexpr uint32_t pll_sys_postdiv1 = 6UL;
-constexpr uint32_t pll_sys_postdiv2 = 2UL;
-constexpr uint32_t pll_usb_postdiv1 = 5UL;
-constexpr uint32_t pll_usb_postdiv2 = 5UL;
-}
+int main()
+{
+    // We need watchdog to use timer::delay()
+    clocks::watchdog_start();
 
-namespace clocks {
-constexpr uint32_t sys_clk_hz = 125'000'000UL;
-constexpr uint32_t peri_clk_hz = 125'000'000UL;
-constexpr uint32_t usb_clk_hz = 48'000'000UL;
-constexpr uint32_t rtc_clock_hz = usb_clk_hz / 1024;
-constexpr uint32_t rosc_clock_hz = 6'500'000;
-}
+    // Every peripheral is held in reset at power-up
+    // We need to release io_bank0 from the reset state to be able to use GPIOs
+    reset::release_subsystem_wait(reset::subsystems::io_bank0);
 
+    gpio::pin<platform::pins::gpio25> led0;
+    led0.function_select(gpio::functions::sio);
+    led0.set_as_output();
+
+    while (true) {
+        led0.toggle();
+        timer::delay(500ms);
+    }
 }

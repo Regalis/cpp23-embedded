@@ -2,7 +2,6 @@
 toolchain_prefix = 'arm-none-eabi-'
 common_args = [
     '-nostartfiles',
-    '-mthumb',
     '-ffunction-sections',
     '-fdata-sections',
     '-mcpu=cortex-m0plus',
@@ -15,6 +14,7 @@ cpp = toolchain_prefix + 'g++'
 ar = toolchain_prefix + 'ar'
 strip = toolchain_prefix + 'strip'
 objdump = toolchain_prefix + 'objdump'
+objcopy = toolchain_prefix + 'objcopy'
 ld = toolchain_prefix + 'ld'
 
 [built-in options]

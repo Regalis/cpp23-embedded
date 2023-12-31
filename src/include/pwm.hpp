@@ -58,7 +58,7 @@ constexpr frequency_config get_frequency_config_for(uint32_t target_frequency)
 {
     constexpr uint32_t top_max = std::numeric_limits<uint16_t>::max() - 1;
     constexpr auto calculate_top = [](uint32_t target_hz) {
-        return ((board::sys_clk_hz + target_hz / 2) / target_hz);
+        return ((board::clocks::sys_clk_hz + target_hz / 2) / target_hz);
     };
     uint64_t target_div;
     uint64_t target_wrap;
@@ -69,13 +69,14 @@ constexpr frequency_config get_frequency_config_for(uint32_t target_frequency)
     } else {
         // TODO: demonkey the following section 🐒
         // TODO: learn more about rounding...
-        target_div = (16 * static_cast<uint64_t>(board::sys_clk_hz) +
+        target_div = (16 * static_cast<uint64_t>(board::clocks::sys_clk_hz) +
                       ((top_max * target_frequency) - 1)) /
                      (top_max * target_frequency);
         target_wrap =
-          ((16 * static_cast<uint64_t>(board::sys_clk_hz) +
-            ((target_div * static_cast<uint64_t>(board::sys_clk_hz)) / 2)) /
-           (target_div * static_cast<uint64_t>(board::sys_clk_hz))) -
+          ((16 * static_cast<uint64_t>(board::clocks::sys_clk_hz) +
+            ((target_div * static_cast<uint64_t>(board::clocks::sys_clk_hz)) /
+             2)) /
+           (target_div * static_cast<uint64_t>(board::clocks::sys_clk_hz))) -
           1;
     }
 
@@ -86,7 +87,7 @@ constexpr frequency_config get_frequency_config_for(uint32_t target_frequency)
 
 constexpr uint32_t get_frequency_from_config(frequency_config config)
 {
-    return (board::sys_clk_hz /
+    return (board::clocks::sys_clk_hz /
             ((config.wrap + 1UL) *
              (config.integer_divisor + (config.fractional_divisor / 16UL))));
 }
@@ -182,7 +183,8 @@ consteval auto from_gpio(T)
     return slice_for<T::pin_no>{};
 }
 
-constexpr uint32_t frequency_maximum [[maybe_unused]] = board::sys_clk_hz;
+constexpr uint32_t frequency_maximum [[maybe_unused]] =
+  board::clocks::sys_clk_hz;
 
 constexpr uint32_t frequency_minimum [[maybe_unused]] =
   get_frequency_from_config(

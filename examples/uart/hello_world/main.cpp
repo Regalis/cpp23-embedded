@@ -19,54 +19,35 @@
  *
  */
 
-#include <cstdint>
-#include <format>
-#include <string_view>
-
 #include "clocks.hpp"
-#include "delay.hpp"
 #include "gpio.hpp"
 #include "reset.hpp"
-#include "rp2040.hpp"
 #include "timer.hpp"
 #include "uart.hpp"
 
-void init_io()
+using namespace std::chrono_literals;
+
+int main()
 {
+    clocks::init();
+    clocks::watchdog_start(platform::xosc::frequency_khz);
+
+    // Every peripheral is held in reset at power-up
+    // We need to release io_bank0 from the reset state to be able to use GPIOs
+    // In this case - we need to use io_bank0 to change the function of the RX,
+    // TX pins
+    reset::release_subsystem_wait(reset::subsystems::io_bank0);
+
     gpio::pin<platform::pins::gpio0> tx;
     gpio::pin<platform::pins::gpio1> rx;
     rx.function_select(gpio::functions::uart);
     tx.function_select(gpio::functions::uart);
     uart::uart0::init(9600);
-}
 
-int main()
-{
-    using namespace std::chrono_literals;
-    clocks::init();
-    clocks::watchdog_start(platform::xosc::frequency_khz);
-    reset::release_subsystem_wait(reset::subsystems::io_bank0);
-    gpio::pin<platform::pins::gpio25> led0;
-    led0.function_select(gpio::functions::sio);
-    led0.set_as_output();
-
-    init_io();
-    uart::uart0::puts("Hello world from Pico ^^\r\n");
-
-    while (1) {
-        for (int i = 0; i < 10; ++i) {
-            led0.toggle();
-            timer::delay(500ms);
-        }
-
-        for (int i = 0; i < 10; ++i) {
-            led0.toggle();
-            timer::delay(250ms);
-        }
-
-        for (int i = 0; i < 10; ++i) {
-            led0.toggle();
-            timer::delay(100ms);
-        }
+    while (true) {
+        uart::uart0::puts("Hello world :-)\r\n");
+        uart::uart0::puts("C++23 embedded experiments by Regalis\r\n");
+        uart::uart0::puts("Visit: blog.regalis.tech\r\n\r\n");
+        timer::delay(3s);
     }
 }

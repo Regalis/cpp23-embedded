@@ -50,7 +50,7 @@ compiler = meson.get_compiler('cpp', native: false)
 add_project_arguments(
   compiler.get_supported_arguments([
     '-std=c++23',
-    '-g',
+    #    '-g',
     '-Wall',
     '-Wextra',
     '-Wformat=2',
@@ -76,14 +76,26 @@ add_project_arguments(
 
 add_project_arguments(
     # TODO: make this a config option
-   '-includeinclude/boards/raspberry_pico.hpp',
+   '-includeboards/raspberry_pico.hpp',
     language: ['cpp'],
     native: false,
 )
 
-include_dirs = include_directories([
-  'src/include',
-])
+include_dirs = include_directories('./src/include/')
 
+cross_objcopy = find_program(
+  meson.get_external_property('objcopy', 'objcopy', native: false)
+)
+
+regalis_pico_bin2uf2 = find_program(
+  'regalis-pico-bin2uf2',
+  native: true,
+  required: false,
+)
+
+executables = []
+binaries = []
+uf2_files = []
 
 subdir('src/')
+subdir('examples/')

@@ -214,7 +214,8 @@ constexpr void pll_init(uint32_t refdiv,
 void init()
 {
     using namespace platform::clocks;
-    using namespace board;
+    using namespace board::pll;
+    using namespace board::clocks;
 
     xosc::init();
 
@@ -264,7 +265,8 @@ void init()
  * an accurate reference clock. The reference clock is divided internally to
  * generate a tick (nominally 1μs) to use as the watchdog tick.
  */
-constexpr void watchdog_start(uint32_t clk_ref_frequency_khz)
+constexpr void watchdog_start(
+  uint32_t clk_ref_frequency_khz = board::clocks::rosc_clock_hz / 1000)
 {
     platform::watchdog::tick::update_regions(
       platform::watchdog::tick_region_cycles{clk_ref_frequency_khz / 1000});

@@ -17,19 +17,11 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-bootloader_src = files([
-  'init.cpp',
-  'bootloader_stage_2.cpp',
-  'interrupts.cpp',
-])
+examples = []
+examples_bin = []
+examples_uf2 = []
 
-bootloader_headers = files([
-  'init.hpp',
-])
+subdir('blink/')
+subdir('uart/')
+subdir('pwm/')
 
-
-headers = files([])
-
-bootloader = bootloader_src + bootloader_headers
-
-subdir('include/')

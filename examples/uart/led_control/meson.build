@@ -17,19 +17,32 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-bootloader_src = files([
-  'init.cpp',
-  'bootloader_stage_2.cpp',
-  'interrupts.cpp',
-])
+example_name = 'uart_led_control'
 
-bootloader_headers = files([
-  'init.hpp',
-])
+examples += executable(
+  example_name + '.elf',
+  bootloader + files(['main.cpp']),
+  include_directories: include_dirs
+)
 
+bin_target = example_name + '.bin'
+uf2_target = example_name + '.uf2'
 
-headers = files([])
+examples_bin += custom_target(
+  bin_target,
+  input: examples[-1],
+  output: bin_target,
+  command: [cross_objcopy, '-Obinary', '@INPUT@', '@OUTPUT@'],
+  build_by_default: true,
+)
 
-bootloader = bootloader_src + bootloader_headers
-
-subdir('include/')
+if regalis_pico_bin2uf2.found()
+  examples_uf2 += custom_target(
+    uf2_target,
+    input: examples_bin[-1],
+    output: uf2_target,
+    command: [regalis_pico_bin2uf2, '@INPUT@'],
+    capture: true,
+    build_by_default: true,
+  )
+endif
