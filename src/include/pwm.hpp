@@ -25,11 +25,71 @@
 #include "gpio.hpp"
 #include "hwio.hpp"
 #include "rp2040.hpp"
+
+#include <limits>
+#include <type_traits>
 #include <utility>
 
 namespace pwm {
 
 using clkdiv_mode = platform::pwm::csr_region_divmode_values;
+
+struct frequency_config
+{
+    uint16_t wrap;
+    uint16_t integer_divisor;
+    uint16_t fractional_divisor;
+};
+
+consteval bool verify_frequency_config(frequency_config cfg)
+{
+    if (cfg.integer_divisor > 255) {
+        return false;
+    }
+
+    if (cfg.fractional_divisor > 15) {
+        return false;
+    }
+
+    return true;
+}
+
+constexpr frequency_config get_frequency_config_for(uint32_t target_frequency)
+{
+    constexpr uint32_t top_max = std::numeric_limits<uint16_t>::max() - 1;
+    constexpr auto calculate_top = [](uint32_t target_hz) {
+        return ((board::sys_clk_hz + target_hz / 2) / target_hz);
+    };
+    uint64_t target_div;
+    uint64_t target_wrap;
+
+    if (calculate_top(target_frequency) < top_max) {
+        target_div = 16;
+        target_wrap = calculate_top(target_frequency) - 1;
+    } else {
+        // TODO: demonkey the following section 🐒
+        // TODO: learn more about rounding...
+        target_div = (16 * static_cast<uint64_t>(board::sys_clk_hz) +
+                      ((top_max * target_frequency) - 1)) /
+                     (top_max * target_frequency);
+        target_wrap =
+          ((16 * static_cast<uint64_t>(board::sys_clk_hz) +
+            ((target_div * static_cast<uint64_t>(board::sys_clk_hz)) / 2)) /
+           (target_div * static_cast<uint64_t>(board::sys_clk_hz))) -
+          1;
+    }
+
+    return {.wrap = static_cast<uint16_t>(target_wrap),
+            .integer_divisor = static_cast<uint16_t>((target_div >> 4)),
+            .fractional_divisor = static_cast<uint16_t>((target_div & 0xf))};
+}
+
+constexpr uint32_t get_frequency_from_config(frequency_config config)
+{
+    return (board::sys_clk_hz /
+            ((config.wrap + 1UL) *
+             (config.integer_divisor + (config.fractional_divisor / 16UL))));
+}
 
 namespace detail {
 
@@ -43,6 +103,19 @@ template<typename T>
 struct pwm_slice
 {
     using descriptor = T;
+
+    static constexpr void set_frequency(uint32_t target_frequency)
+    {
+        const auto frequency_config =
+          get_frequency_config_for(target_frequency);
+        set_frequency(frequency_config);
+    }
+
+    static constexpr void set_frequency(frequency_config config)
+    {
+        set_clkdiv(config.integer_divisor, config.fractional_divisor);
+        set_wrap(config.wrap);
+    }
 
     static constexpr void set_wrap(uint16_t wrap)
     {
@@ -70,10 +143,12 @@ struct pwm_slice
           platform::pwm::csr_region_divmode{mode});
     }
 
-    static constexpr void set_clkdiv(uint16_t integer_divisor)
+    static constexpr void set_clkdiv(uint16_t integer_divisor,
+                                     uint16_t fractional_divisor = 0)
     {
         descriptor::div::update_regions(
-          platform::pwm::div_region_int{integer_divisor});
+          platform::pwm::div_region_int{integer_divisor},
+          platform::pwm::div_region_frac{fractional_divisor});
     }
 };
 
@@ -106,6 +181,12 @@ consteval auto from_gpio(T)
 {
     return slice_for<T::pin_no>{};
 }
+
+constexpr uint32_t frequency_maximum [[maybe_unused]] = board::sys_clk_hz;
+
+constexpr uint32_t frequency_minimum [[maybe_unused]] =
+  get_frequency_from_config(
+    {.wrap = 0xffff, .integer_divisor = 0xff, .fractional_divisor = 0xf});
 
 }
 
