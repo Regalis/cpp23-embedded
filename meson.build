@@ -18,7 +18,7 @@
 #
 
 project(
-  'mcupp',
+  'regalis-cpp23-embedded',
   'cpp',
   license: 'GPL-3.0-or-later',
   default_options: [
@@ -92,6 +92,12 @@ regalis_pico_bin2uf2 = find_program(
   native: true,
   required: false,
 )
+
+if not regalis_pico_bin2uf2.found()
+  warning('Warning!')
+  warning('The regalis-pico-bin2uf2 utility was not found.')
+  warning('The firmware images (uf2 files) will not be generated...')
+endif
 
 executables = []
 binaries = []

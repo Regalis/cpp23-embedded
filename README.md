@@ -10,6 +10,19 @@ a modern C++ framework for microcontrollers).
 This project is at it's very early stage. Things may be brutally rewritten,
 reorganized without any remorse.
 
+# MCU selected for this experiment
+
+I have decided to use `RP2040` from the **Raspberry Pi** as a main
+microcontroller for this experiment. It was a rather difficult (but necessary)
+choice because the `RP2040` is not easy to use when it comes to real bare metal
+programming. Mainly because it has a complicated boot method due to the lack of
+built-in flash memory. This significantly raised the entry barrier.
+
+Everything you see in this repository is a result of **real bare metal
+programming** in C++23. Everything is written from scratch without **any
+external dependencies**. I mean everything... Including **linker scripts**,
+**memory map** and even **bootloader**.
+
 # Basic assumptions and goals
 
 The final library/framework should comply with the following assumptions:
@@ -116,8 +129,8 @@ papers may allow us to define a multidimensional subscript operator
 access registers:
 
 ```c++
-registers::gpio_oe[bit::1, bit::2, bit::5] = 1;
-registers::gpio_oe[bit::1, bit::2, bit::5] = state::high;
+registers::gpio_oe[bits::bit1, bits::bit2, bits::bit5] = 1;
+registers::gpio_oe[bits::bit1, bits::bit2, bits::bit5] = state::high;
 
 // or simpler:
 registers::gpio_oe[1, 2, 5] = 1;
@@ -138,7 +151,7 @@ interface:
 
 ```c++
 constexpr auto interface_descriptor = interface::gpio::for<drivers::lcd::hd44780>{
-    .mode = drivers::lcd::hd44780::4bit,
+    .mode = drivers::lcd::hd44780::four_bits,
     .register_select = platform::pins::gpio10,
     .read_write = platform::pins::gpio11,
     .enable = platform::pins::gpio12,
@@ -190,9 +203,25 @@ To build the project, use the following command:
 
 ```console
 $ meson setup --cross-file cross/armv6-m/rp2040.txt build/
-$ ninja -C build/ -v
+$ meson compile -C build/
 ```
 
-The following file should be created: `mcupp-example.elf` inside the
-`build/src/` directory.
+The above commands will build all the examples by default.
 
+## Flashing
+
+Examples are ready to be flashed to the Raspberry Pi Pico board. In order to
+generate firmware images (UF2) for the Pico - you will need to convert the
+`elf` files into the `uf2` files. I have implemented the tool specificly for
+this job. You can download it [here](https://gitlab.com/Regalis/pico-bin2uf2). 
+
+I have prepared the build system in such a way that UF2 files will be
+automatically generated as soon as the `regalis-pico-bin2uf2` program is in
+your PATH.
+
+### Things to do after installing `regalis-pico-bin2uf2`
+
+The only thing to is to reconfigure your build directory with `meson setup
+--reconfigure build/` and to run `meson compile -C build` one again.
+
+Happy hacking!
