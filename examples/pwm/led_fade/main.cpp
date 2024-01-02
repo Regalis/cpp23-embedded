@@ -45,6 +45,8 @@ int main()
 
     // Get the right PWM instance (called a slice) for the specified GPIO pin
     auto pwm_slice = pwm::from_gpio(led0);
+    auto pwm_channel = pwm::channel::from_gpio(led0);
+    using pwm_channel_t = decltype(pwm_channel);
 
     // Set the prescaler
     pwm_slice.set_clkdiv(100);
@@ -58,15 +60,14 @@ int main()
     constexpr unsigned short duty_max = 101;
 
     while (true) {
-        // TODO: get the right channel for the specified GPIO pin
-        pwm_slice.set_channel_levels(pwm::channel_b{0});
+        pwm_slice.set_channel_levels(pwm_channel_t{0});
         led0.function_select(gpio::functions::pwm);
         for (unsigned short i = 0; i <= duty_max; ++i) {
-            pwm_slice.set_channel_levels(pwm::channel_b{i});
+            pwm_slice.set_channel_levels(pwm_channel_t{i});
             timer::delay(20ms);
         }
         for (unsigned short i = 0; i <= duty_max; ++i) {
-            pwm_slice.set_channel_levels(pwm::channel_b{duty_max - i});
+            pwm_slice.set_channel_levels(pwm_channel_t{duty_max - i});
             timer::delay(20ms);
         }
         timer::delay(1s);

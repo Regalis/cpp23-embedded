@@ -160,6 +160,31 @@ struct slice_for_pin
     using type = pwm_slice<platform::pwm::detail::channel<slice_no>>;
 };
 
+enum class slice_channel
+{
+    channel_a,
+    channel_b,
+};
+
+template<slice_channel channel>
+consteval auto get_cc_register_region()
+{
+    if constexpr (channel == slice_channel::channel_a) {
+        return platform::pwm::cc_region_a{};
+    } else {
+        return platform::pwm::cc_region_b{};
+    }
+};
+
+template<platform::pins Pin>
+struct channel_for_pin
+{
+    constexpr static slice_channel channel_no = (std::to_underlying(Pin) & 1)
+                                                  ? slice_channel::channel_b
+                                                  : slice_channel::channel_a;
+    using type = std::decay_t<decltype(get_cc_register_region<channel_no>())>;
+};
+
 }
 
 using channel_a = detail::channel<platform::pwm::cc_region_a>::region;
@@ -175,12 +200,26 @@ using slice6 = detail::pwm_slice<platform::pwm::ch6>;
 using slice7 = detail::pwm_slice<platform::pwm::ch7>;
 
 template<platform::pins Pin>
-using slice_for = detail::slice_for_pin<Pin>::type;
+using slice_for_pin = detail::slice_for_pin<Pin>::type;
+
+template<platform::pins Pin>
+using channel_for_pin = detail::channel_for_pin<Pin>::type;
+
+template<gpio::gpio_pin Gpio>
+using channel_for_gpio = detail::channel_for_pin<Gpio::pin_no>::type;
 
 template<typename T>
 consteval auto from_gpio(T)
 {
-    return slice_for<T::pin_no>{};
+    return slice_for_pin<T::pin_no>{};
+}
+
+namespace channel {
+template<typename T>
+consteval auto from_gpio(T)
+{
+    return channel_for_gpio<T>{};
+}
 }
 
 constexpr uint32_t frequency_maximum [[maybe_unused]] =
