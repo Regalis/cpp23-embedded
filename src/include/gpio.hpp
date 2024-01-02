@@ -23,6 +23,7 @@
 #define GPIO_HPP
 
 #include "rp2040.hpp"
+#include <type_traits>
 
 namespace gpio {
 enum class functions : uint8_t
@@ -45,24 +46,24 @@ static constexpr void function_select(functions func)
     ctrl_reg::set_value(std::to_underlying(func));
 }
 
-static constexpr void set_as_output(platform::pins pin_no)
+static constexpr void set_as_output(const valid_bit_position auto&... pin_no)
 {
-    platform::registers::gpio_oe_set::set_bits(pin_no);
+    platform::registers::gpio_oe_set::set_bits(pin_no...);
 }
 
-static constexpr void set_high(platform::pins pin_no)
+static constexpr void set_high(const valid_bit_position auto&... pin_no)
 {
-    platform::registers::gpio_out_set::set_bits(pin_no);
+    platform::registers::gpio_out_set::set_bits(pin_no...);
 }
 
-static constexpr void set_low(platform::pins pin_no)
+static constexpr void set_low(const valid_bit_position auto&... pin_no)
 {
-    platform::registers::gpio_out_clr::set_bits(pin_no);
+    platform::registers::gpio_out_clr::set_bits(pin_no...);
 }
 
-static constexpr void toggle(platform::pins pin_no)
+static constexpr void toggle(const valid_bit_position auto&... pin_no)
 {
-    platform::registers::gpio_out_xor::set_bits(pin_no);
+    platform::registers::gpio_out_xor::set_bits(pin_no...);
 }
 
 template<platform::pins Pin>
@@ -96,6 +97,37 @@ class pin
         gpio::toggle(pin_no);
     }
 };
+
+// Todo: add more constraints
+template<typename T>
+concept gpio_pin = requires(T t) { T::pin_no; };
+
+constexpr void set_as_output(const gpio_pin auto&... gpio_pins)
+{
+    set_as_output(gpio_pins.pin_no...);
+}
+
+constexpr void set_high(const gpio_pin auto&... gpio_pins)
+{
+    set_high(gpio_pins.pin_no...);
+}
+
+constexpr void set_low(const gpio_pin auto&... gpio_pins)
+{
+    set_low(gpio_pins.pin_no...);
+}
+
+constexpr void toggle(const gpio_pin auto&... gpio_pins)
+{
+    toggle(gpio_pins.pin_no...);
+}
+
+constexpr void function_select(functions func,
+                               const gpio_pin auto&... gpio_pins)
+{
+    ((function_select<gpio_pins.pin_no>(func)), ...);
+}
+
 }
 
 #endif
