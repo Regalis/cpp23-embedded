@@ -161,7 +161,7 @@ namespace detail {
 template<auto T>
 struct interface_for
 {
-    static_assert(true,
+    static_assert(false,
                   "Undefined interface for the specified descriptor. This is "
                   "probably a driver bug.");
     using type = std::false_type;
@@ -171,6 +171,7 @@ struct interface_for
 
 template<auto T>
 using interface_for = detail::interface_for<T>::type;
+
 }
 
 #endif
