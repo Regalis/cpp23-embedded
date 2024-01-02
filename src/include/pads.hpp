@@ -1,6 +1,6 @@
 /*
  *
- * Copyright (C) 2023 Patryk Jaworski (blog.regalis.tech)
+ * Copyright (C) 2023-2024 Patryk Jaworski (blog.regalis.tech)
  *
  * Author: Patryk Jaworski <regalis@regalis.tech>
  *
@@ -82,13 +82,13 @@ struct qspi
 
 template<typename T>
 concept pad_descriptor = requires {
-                             typename T::pad;
-                             requires std::is_scoped_enum_v<typename T::pad>;
+    typename T::pad;
+    requires std::is_scoped_enum_v<typename T::pad>;
 
-                             // clang-format off
+    // clang-format off
     { T::base_addr } -> std::same_as<const platform::reg_ptr_t&>;
-                             // clang-format on
-                         };
+    // clang-format on
+};
 
 // TODO: different reset values for QSPI and GPIO blocks...
 // FIXME: different reset values for QSPI and GPIO blocks...

@@ -1,6 +1,6 @@
 /*
  *
- * Copyright (C) 2023 Patryk Jaworski (blog.regalis.tech)
+ * Copyright (C) 2023-2024 Patryk Jaworski (blog.regalis.tech)
  *
  * Author: Patryk Jaworski <regalis@regalis.tech>
  *
