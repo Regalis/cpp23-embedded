@@ -105,11 +105,12 @@ struct pwm_slice
 {
     using descriptor = T;
 
-    static constexpr void set_frequency(uint32_t target_frequency)
+    static constexpr frequency_config set_frequency(uint32_t target_frequency)
     {
         const auto frequency_config =
           get_frequency_config_for(target_frequency);
         set_frequency(frequency_config);
+        return frequency_config;
     }
 
     static constexpr void set_frequency(frequency_config config)
@@ -201,6 +202,9 @@ using slice7 = detail::pwm_slice<platform::pwm::ch7>;
 
 template<platform::pins Pin>
 using slice_for_pin = detail::slice_for_pin<Pin>::type;
+
+template<gpio::gpio_pin Gpio>
+using slice_for_gpio = detail::slice_for_pin<Gpio::pin_no>::type;
 
 template<platform::pins Pin>
 using channel_for_pin = detail::channel_for_pin<Pin>::type;
