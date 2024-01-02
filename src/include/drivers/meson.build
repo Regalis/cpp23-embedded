@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2023 Patryk Jaworski (blog.regalis.tech)
+# Copyright (C) 2023-2024 Patryk Jaworski (blog.regalis.tech)
 #
 # Author: Patryk Jaworski <regalis@regalis.tech>
 #
@@ -17,18 +17,4 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-headers += files([
-  'bitops.hpp',
-  'clocks.hpp',
-  'delay.hpp',
-  'gpio.hpp',
-  'hwio.hpp',
-  'pads.hpp',
-  'reset.hpp',
-  'rp2040.hpp',
-  'timer.hpp',
-  'uart.hpp',
-  'xosc.hpp',
-])
-
-subdir('drivers/')
+subdir('lcd/')
