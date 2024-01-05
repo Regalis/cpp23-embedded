@@ -78,6 +78,15 @@ SECTIONS {
     } > SRAM
 
     __stack_pointer = ORIGIN(SRAM_BANK_B) + LENGTH(SRAM_BANK_B);
+
+    /* Remove information from the standard libraries */
+    /DISCARD/ :
+    {
+      libc.a ( * )
+      libm.a ( * )
+      libgcc.a ( * )
+    }
 }
+
 
 ENTRY(__regalis_init)

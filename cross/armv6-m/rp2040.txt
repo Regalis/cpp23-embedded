@@ -5,7 +5,8 @@ common_args = [
     '-ffunction-sections',
     '-fdata-sections',
     '-mcpu=cortex-m0plus',
-    '-mthumb',]
+    '-mthumb',
+    '-mfloat-abi=soft']
 linker_script = '@DIRNAME@' / 'rp2040.ld'
 
 [binaries]
@@ -21,10 +22,10 @@ ld = toolchain_prefix + 'ld'
 cpp_args = common_args + [
     '-fno-exceptions']
 c_args = common_args
-cpp_link_args = [
-    '-Wl,--script=' + linker_script,
+cpp_link_args = common_args + [
     '-nostartfiles',
-    '-mthumb',]
+    '-Wl,--script=' + linker_script,
+    '-Wl,--verbose',]
 
 
 [host_machine]
