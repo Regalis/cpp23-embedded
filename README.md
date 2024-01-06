@@ -23,6 +23,65 @@ programming** in C++23. Everything is written from scratch without **any
 external dependencies**. I mean everything... Including **linker scripts**,
 **memory map** and even **bootloader**.
 
+Things that are up and running as for today:
+
+* booting from the external flash memory using hand-written bootloader (stage #2),
+* running the system at 125MHz:
+    * configuring a crystal oscillator (XOSC),
+    * configuring PLLs,
+    * configuring all system clocks (`clk_gpout{0..3}`, `clk_ref`, `clk_sys`, `clk_peri`, `clk_usb`, `clk_adc`, `clk_rtc`),
+* configuring a watchdog timer,
+* configuring timers,
+* sending/receiving data with UART,
+* configuring GPIOs,
+* configuring PWMs.
+
+Take a look at [examples/](https://gitlab.com/Regalis/cpp23-embedded/-/tree/master/examples) for a list of **working examples**.
+
+Teaser:
+
+```c++
+// (cut)
+int main()
+{
+    gpio::pin<platform::pins::gpio25> led0;
+    led0.function_select(gpio::functions::sio);
+    led0.set_as_output();
+
+    // Prepere descriptor for the selected interface
+    constexpr auto descriptor =
+      hd44780::interfaces::gpio4_bit{.register_select = platform::pins::gpio16,
+                                     .enable = platform::pins::gpio17,
+                                     .data4 = platform::pins::gpio18,
+                                     .data5 = platform::pins::gpio19,
+                                     .data6 = platform::pins::gpio20,
+                                     .data7 = platform::pins::gpio21};
+
+    // Define your LCD hardware layout
+    constexpr auto configuration = hd44780::configuration{
+      .columns = 16, .lines = 2, .font_size = hd44780::font::font_5x8};
+
+    // Get type of the driver based on your descriptor and configuration
+    using lcd =
+      hd44780::hd44780<hd44780::interface_for<descriptor>, configuration>;
+
+    timer::delay(500ms);
+
+    // Initialize both MCU interface (in this case - the GPIOs) and the LCD
+    // itself
+    lcd::init();
+
+    lcd::soft_puts("Hello world");
+    lcd::cursor_goto(0, 1);
+    lcd::soft_puts("blog.regalis.tech");
+
+    while (true) {
+        led0.toggle();
+        timer::delay(250ms);
+    }
+// (cut)
+```
+
 # Basic assumptions and goals
 
 The final library/framework should comply with the following assumptions:
